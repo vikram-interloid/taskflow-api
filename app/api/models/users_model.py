@@ -44,10 +44,12 @@ class User(Base):
     
     user_tasks: Mapped[list["UserTask"]] = relationship(
         back_populates="user",
+        foreign_keys="UserTask.user_id",
     )
 
     user_roles: Mapped[list["UserRole"]] = relationship(
         back_populates="user",
+        foreign_keys="UserRole.user_id",
     )
 
     refresh_tokens: Mapped[list["RefreshToken"]] = relationship(
@@ -56,4 +58,15 @@ class User(Base):
 
     created_tasks: Mapped[list["Task"]] = relationship(
         back_populates="creator",
+        foreign_keys="Task.created_by",
+    )
+    
+    assigned_tasks: Mapped[list["UserTask"]] = relationship(
+    back_populates="creator",
+    foreign_keys="UserTask.created_by",
+)
+
+    assigned_roles: Mapped[list["UserRole"]] = relationship(
+        back_populates="assigned_by_user",
+        foreign_keys="UserRole.assigned_by",
     )

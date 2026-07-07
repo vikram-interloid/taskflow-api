@@ -68,8 +68,7 @@ class UserTask(Base):
         index = True
     )
     
-    
-    users: Mapped["User"] = relationship(
+    user: Mapped["User"] = relationship(
         'User',
         foreign_keys=[user_id],
         back_populates = 'user_tasks'
@@ -83,4 +82,5 @@ class UserTask(Base):
     creator: Mapped["User"] = relationship(
         "User",
         foreign_keys=[created_by],
+        back_populates="assigned_tasks",
     )
