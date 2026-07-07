@@ -12,30 +12,30 @@ from app.api.database.db_config import Base
 class User(Base):
     __tablename__ = 'users'
     
-    user_id : Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid = True),
         primary_key = True,
         default=uuid.uuid4
     )
     
-    user_name : Mapped[str] = mapped_column(
+    user_name: Mapped[str] = mapped_column(
         String(50),
         unique=True,
         nullable = False
     )
     
-    email : Mapped[str] = mapped_column(
-        String(50),
+    email: Mapped[str] = mapped_column(
+        String(255),
         unique=True,
         nullable = False
     )
      
-    password_hash : Mapped[str] = mapped_column(
+    password_hash: Mapped[str] = mapped_column(
         String(255),
         nullable = False
     )
     
-    created_at : Mapped[datetime] = mapped_column (
+    created_at: Mapped[datetime] = mapped_column (
         TIMESTAMP( timezone = True),
         server_default = func.now(),
         nullable=False,

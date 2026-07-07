@@ -20,33 +20,33 @@ class UserRole(Base):
         ),
     )
     
-    id : Mapped[uuid.UUID] = mapped_column (
+    id: Mapped[uuid.UUID] = mapped_column (
         UUID(as_uuid = True),
         primary_key = True,
         default=uuid.uuid4
     )
     
-    role_id : Mapped[uuid.UUID] = mapped_column(
+    role_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid = True),
         ForeignKey("roles.role_id"),
         nullable = False,
         index = True
     )
     
-    user_id : Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid = True),
         ForeignKey("users.user_id",ondelete="CASCADE"),
         nullable = False,
         index = True
     )
     
-    created_at : Mapped[datetime] = mapped_column (
+    created_at: Mapped[datetime] = mapped_column (
         TIMESTAMP(timezone = True),
         server_default = func.now(),
         nullable=False,
     )
     
-    assigned_by : Mapped[uuid.UUID] = mapped_column(
+    assigned_by: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid = True),
         ForeignKey("users.user_id"),
         nullable = False,

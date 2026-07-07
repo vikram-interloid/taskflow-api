@@ -20,48 +20,48 @@ class UserTask(Base):
         ),
     )
     
-    id : Mapped[uuid.UUID] = mapped_column (
+    id: Mapped[uuid.UUID] = mapped_column (
         UUID(as_uuid = True),
         primary_key = True,
         default=uuid.uuid4
     )
     
-    task_id : Mapped[uuid.UUID] = mapped_column(
+    task_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid = True),
         ForeignKey("tasks.task_id",ondelete="CASCADE"),
         nullable = False,
         index = True
     )
     
-    user_id : Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid = True),
         ForeignKey("users.user_id"),
         nullable = False,
         index = True
     )
     
-    created_at : Mapped[datetime] = mapped_column (
+    created_at: Mapped[datetime] = mapped_column (
         TIMESTAMP(timezone = True),
         server_default = func.now(),
         nullable=False,
     )
     
-    due_at : Mapped[datetime] = mapped_column (
+    due_at: Mapped[datetime] = mapped_column (
         TIMESTAMP(timezone = True),
         nullable=False,
     )
     
-    status : Mapped[str] = mapped_column (
+    status: Mapped[str] = mapped_column (
         String(25),
         nullable = False
     )
     
-    completed_at : Mapped[datetime | None] = mapped_column (
+    completed_at: Mapped[datetime | None] = mapped_column (
         TIMESTAMP(timezone = True),
         nullable=True,
     )
     
-    created_by : Mapped[uuid.UUID] = mapped_column(
+    created_by: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid = True),
         ForeignKey("users.user_id"),
         nullable = False,
@@ -69,13 +69,13 @@ class UserTask(Base):
     )
     
     
-    users : Mapped["User"] = relationship(
+    users: Mapped["User"] = relationship(
         'User',
         foreign_keys=[user_id],
         back_populates = 'user_tasks'
     )
     
-    task : Mapped["Task"] = relationship(
+    task: Mapped["Task"] = relationship(
         'Task',
         back_populates = 'user_tasks'
     )
