@@ -7,6 +7,8 @@ from app.api.database.db_config import get_db
 from app.api.routers.user_router import router as user_router
 from app.api.routers.role_router import router as role_router
 from app.api.routers.task_router import router as task_router
+from app.api.routers.user_role_router import router as user_role_router
+from app.api.routers.user_task_router import router as user_task_router
 
 
 
@@ -15,6 +17,8 @@ app = FastAPI()
 app.include_router(user_router)
 app.include_router(role_router)
 app.include_router(task_router)
+app.include_router(user_role_router)
+app.include_router(user_task_router)
 
 
 @app.get('/')

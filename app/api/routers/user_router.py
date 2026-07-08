@@ -66,7 +66,7 @@ def update_user(
 @router.delete(
     '/{user_id}',
     response_model = UserResponse,
-    status_code = status.HTTP_200_OK,
+    status_code = status.HTTP_204_NO_CONTENT,
 )
 def delete_user(
     user_id: UUID,

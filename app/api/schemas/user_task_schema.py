@@ -11,14 +11,13 @@ class UserTaskBase(BaseModel):
     model_config = ConfigDict(extra = "forbid")
     
 class UserTaskCreate(UserTaskBase):
-    pass
+    created_by: UUID
 
 class UserTaskResponse(UserTaskBase):
     id: UUID
     created_at: datetime
-    due_at: datetime
     status: str
-    completed_at: datetime | None
+    completed_at: datetime | None = None
     created_by: UUID
     
     model_config = ConfigDict(from_attributes = True)

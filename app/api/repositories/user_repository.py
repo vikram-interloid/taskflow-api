@@ -42,9 +42,8 @@ class UserRepository:
         return user
         
     
-    def delete_user(self, user: User) -> User:
+    def delete_user(self, user: User) -> None:
         self.db.delete(user)
         self.db.commit()
-        
-        return user
+
         

@@ -75,7 +75,7 @@ class UserService:
     def delete_user(
             self,
             user_id: UUID,
-        ) -> User:
+        ) -> None:
         
         user = self.user_repository.get_user_by_id(user_id)
        
@@ -86,6 +86,6 @@ class UserService:
             )
 
         
-        return self.user_repository.delete_user(user) 
+        self.user_repository.delete_user(user) 
         
         
