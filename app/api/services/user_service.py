@@ -2,6 +2,8 @@ from fastapi import HTTPException, status
 from uuid import UUID
 from sqlalchemy.orm import Session
 
+from app.api.core.security import hash_password
+
 from app.api.models.users_model import User
 from app.api.repositories.user_repository import UserRepository
 from app.api.schemas.user_schema import UserCreate, UserUpdate
@@ -30,7 +32,7 @@ class UserService:
         user = User(
             user_name = userdata.user_name,
             email = userdata.email,
-            password_hash = userdata.password_hash
+            password_hash = hash_password(userdata.password_hash)
         )
 
         return self.user_repository.create_user(user)

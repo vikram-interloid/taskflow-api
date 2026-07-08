@@ -3,6 +3,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.api.core.dependencies import get_current_user
+
 from app.api.database.db_config import get_db
 from app.api.schemas.user_schema import UserCreate,UserResponse,UserUpdate
 from app.api.services.user_service import UserService
@@ -33,6 +35,7 @@ def create_user(
     status_code = status.HTTP_200_OK,
 )
 def get_all_users(
+    current_user=Depends(get_current_user),
     service: UserService = Depends(get_user_service)
 ):
     return service.get_all_users()
@@ -45,6 +48,7 @@ def get_all_users(
 )
 def get_user_by_id(
     user_id: UUID,
+    current_user=Depends(get_current_user),
     service: UserService = Depends(get_user_service)
 ):
     return service.get_user_by_id(user_id)
@@ -58,6 +62,7 @@ def get_user_by_id(
 def update_user(
     user_id: UUID,
     user_data: UserUpdate,
+    current_user=Depends(get_current_user),
     service: UserService = Depends(get_user_service)
 ):
     return service.update_user(user_id,user_data)
@@ -65,11 +70,11 @@ def update_user(
 
 @router.delete(
     '/{user_id}',
-    response_model = UserResponse,
     status_code = status.HTTP_204_NO_CONTENT,
 )
 def delete_user(
     user_id: UUID,
+    current_user=Depends(get_current_user),
     service: UserService = Depends(get_user_service)
 ):
-    return service.delete_user(user_id)
+    service.delete_user(user_id)

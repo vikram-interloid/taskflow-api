@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.api.models.roles_model import Role
 from app.api.models.user_role import UserRole
 
 class UserRoleRepository:
@@ -59,3 +60,13 @@ class UserRoleRepository:
 	) -> None:
 			self.db.delete(user_role)
 			self.db.commit()
+   
+
+	def get_roles_by_user_id(self, user_id: UUID):
+		stmt = (
+			select(Role)
+			.join(UserRole, Role.role_id == UserRole.role_id)
+			.where(UserRole.user_id == user_id)
+		)
+		result = self.db.execute(stmt)
+		return result.scalars().all()

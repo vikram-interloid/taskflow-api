@@ -21,27 +21,24 @@ class UserTaskService:
         user_task_data: UserTaskCreate,
     ) -> UserTask:
         
-        user = self.user_repository.get_user_by_id(
-            user_task_data.user_id
-        )
+        user = self.user_repository.get_user_by_id(user_task_data.user_id)
+        
         if user is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found",
             )
 
-        task = self.task_repository.get_task_by_id(
-            user_task_data.task_id
-        )
+        task = self.task_repository.get_task_by_id(user_task_data.task_id)
+        
         if task is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Task not found",
             )
 
-        creator = self.user_repository.get_user_by_id(
-            user_task_data.created_by
-        )
+        creator = self.user_repository.get_user_by_id(user_task_data.created_by)
+        
         if creator is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

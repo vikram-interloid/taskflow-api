@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 
 from app.api.models.roles_model import Role
 
-
 class RoleRepository:
     def __init__(self, db: Session):
         self.db = db

@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.api.models.users_model import User
 from app.api.models.task_model import Task
 from app.api.repositories.task_repository import TaskRepository
 from app.api.repositories.user_repository import UserRepository
@@ -14,8 +15,8 @@ class TaskService:
         self.task_repository = TaskRepository(db)
         self.user_repository = UserRepository(db)
 
-    def create_task(self, taskdata: TaskCreate) -> Task:
-        user = self.user_repository.get_user_by_id(taskdata.created_by)
+    def create_task(self, taskdata: TaskCreate,current_user: User) -> Task:
+        user = self.user_repository.get_user_by_id(current_user.user_id)
 
         if user is None:
             raise HTTPException(
@@ -26,7 +27,7 @@ class TaskService:
         task = Task(
             task_name=taskdata.task_name,
             task_desc=taskdata.task_desc,
-            created_by=taskdata.created_by,
+            created_by=current_user.user_id,
         )
 
         return self.task_repository.create_task(task)

@@ -3,6 +3,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
+from app.api.core.dependencies import get_current_user
+
+from app.api.models.users_model import User
+from app.api.core.dependencies import get_current_user
 from app.api.database.db_config import get_db
 from app.api.schemas.task_schema import TaskCreate,TaskResponse,TaskUpdate
 from app.api.services.task_service import TaskService
@@ -27,9 +31,10 @@ def get_task_service(
 )
 def create_task(
     task_data: TaskCreate,
+    current_user: User = Depends(get_current_user),
     service: TaskService = Depends(get_task_service),
 ):
-    return service.create_task(task_data)
+    return service.create_task(task_data,current_user)
 
 
 @router.get(
@@ -38,6 +43,7 @@ def create_task(
     status_code=status.HTTP_200_OK,
 )
 def get_all_tasks(
+    current_user=Depends(get_current_user),
     service: TaskService = Depends(get_task_service),
 ):
     return service.get_all_tasks()
@@ -50,6 +56,7 @@ def get_all_tasks(
 )
 def get_task_by_id(
     task_id: UUID,
+    current_user=Depends(get_current_user),
     service: TaskService = Depends(get_task_service),
 ):
     return service.get_task_by_id(task_id)
@@ -63,6 +70,7 @@ def get_task_by_id(
 def update_task(
     task_id: UUID,
     task_data: TaskUpdate,
+    current_user=Depends(get_current_user),
     service: TaskService = Depends(get_task_service),
 ):
     return service.update_task(task_id, task_data)
@@ -74,6 +82,7 @@ def update_task(
 )
 def delete_task(
     task_id: UUID,
+    current_user=Depends(get_current_user),
     service: TaskService = Depends(get_task_service),
 ):
     service.delete_task(task_id)

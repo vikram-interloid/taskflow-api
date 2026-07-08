@@ -18,7 +18,7 @@ class TaskBase(BaseModel):
 
 
 class TaskCreate(TaskBase):
-    created_by: UUID
+    pass
 
 
 class TaskResponse(TaskBase):
