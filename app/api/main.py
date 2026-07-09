@@ -3,6 +3,13 @@ from fastapi import Depends, FastAPI
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+
+from app.api.core.auth_middleware import AuthMiddleware
+from app.api.core.limiter import limiter
+
 from app.api.database.db_config import get_db
 from app.api.routers.auth_router import router as auth_router
 from app.api.routers.user_router import router as user_router
@@ -16,6 +23,14 @@ from app.api.routers.user_task_router import router as user_task_router
 app = FastAPI(
     title = 'TaskFlow-API'
 )
+
+app.state.limiter = limiter
+
+app.add_exception_handler(RateLimitExceeded,_rate_limit_exceeded_handler)
+
+app.add_middleware(SlowAPIMiddleware)
+app.add_middleware(AuthMiddleware)
+
 
 app.include_router(auth_router)
 app.include_router(user_router)

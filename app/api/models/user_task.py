@@ -3,7 +3,9 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import TIMESTAMP, UUID, ForeignKey, String, UniqueConstraint, func
+from app.api.enums.task_status import TaskStatus
+
+from sqlalchemy import TIMESTAMP, UUID, ForeignKey, String, UniqueConstraint, func, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.api.database.db_config import Base
@@ -51,9 +53,13 @@ class UserTask(Base):
         nullable=False,
     )
     
-    status: Mapped[str] = mapped_column (
-        String(25),
-        nullable = False
+    status: Mapped[TaskStatus] = mapped_column (
+        Enum(
+            TaskStatus,
+            values_callable=lambda x: [e.value for e in x],
+        name="taskstatus",
+        ),
+        default=TaskStatus.PENDING,
     )
     
     completed_at: Mapped[datetime | None] = mapped_column (

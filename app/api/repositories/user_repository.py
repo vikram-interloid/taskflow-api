@@ -4,9 +4,12 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.models.users_model import User
+from app.api.repositories.base_repository import BaseRepository
+from app.api.schemas.query_schema import UserQueryParams
 
 
-class UserRepository:
+class UserRepository(BaseRepository):
+    
     def __init__(self,db: Session):
         self.db = db
     
@@ -31,10 +34,55 @@ class UserRepository:
         result = self.db.execute(stmt)
         return result.scalar_one_or_none()
     
-    def get_all_users(self):
+    def get_all_users(
+        self,
+        query: UserQueryParams,
+    ):
+
         stmt = select(User)
+
+        filters = {
+            "email": User.email,
+        }
+
+        stmt = self.apply_filters(
+            stmt=stmt,
+            filters=filters,
+            query=query,
+        )
+
+        stmt = self.apply_search(
+            stmt=stmt,
+            search=query.search,
+            columns=[
+                User.user_name,
+                User.email,
+            ],
+        )
+
+        sortable_columns = {
+            "user_name": User.user_name,
+            "email": User.email,
+            "created_at": User.created_at,
+        }
+
+        stmt = self.apply_sort(
+            stmt=stmt,
+            sortable_columns=sortable_columns,
+            sort_by=query.sort_by,
+            order=query.order,
+        )
+
+        stmt = self.apply_pagination(
+            stmt=stmt,
+            page=query.page,
+            limit=query.limit,
+        )
+
         result = self.db.execute(stmt)
+
         return result.scalars().all()
+    
     
     def update_user(self, user: User) -> User:
         self.db.commit()

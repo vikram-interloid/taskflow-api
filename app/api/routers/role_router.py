@@ -26,7 +26,7 @@ def get_role_service(db: Session = Depends(get_db),) -> RoleService:
 )
 def create_role(
     role_data: RoleCreate,
-    current_user= Depends(require_roles(["Admin"])),
+    current_role= Depends(require_roles(["Admin"])),
     service: RoleService = Depends(get_role_service)
 ):
     return service.create_role(role_data)
@@ -37,7 +37,7 @@ def create_role(
     status_code = status.HTTP_200_OK,
 )
 def get_all_roles(
-    current_user=Depends(get_current_user),
+    current_role=Depends(get_current_user),
     service: RoleService = Depends(get_role_service)
 ):
     return service.get_all_roles()
@@ -50,7 +50,7 @@ def get_all_roles(
 )
 def get_role_by_id(
     role_id: UUID,
-    current_user=Depends(get_current_user),
+    current_role=Depends(get_current_user),
     service: RoleService = Depends(get_role_service)
 ):
     return service.get_role_by_id(role_id)
@@ -64,7 +64,7 @@ def get_role_by_id(
 def update_role(
     role_id: UUID,
     role_data: RoleUpdate,
-    current_user=Depends(get_current_user),
+    current_role=Depends(get_current_user),
     service: RoleService = Depends(get_role_service)
 ):
     return service.update_role(role_id,role_data)
@@ -76,7 +76,7 @@ def update_role(
 )
 def delete_role(
     role_id: UUID,
-    current_user=Depends(get_current_user),
+    current_role=Depends(get_current_user),
     service: RoleService = Depends(get_role_service)
 ):
     return service.delete_role(role_id)

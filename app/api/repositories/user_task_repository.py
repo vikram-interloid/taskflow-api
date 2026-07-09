@@ -4,8 +4,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.models.user_task import UserTask
+from app.api.repositories.base_repository import BaseRepository
+from app.api.schemas.query_schema import UserTaskQueryParams
 
-class UserTaskRepository:
+class UserTaskRepository(BaseRepository):
     def __init__(self, db: Session):
         self.db = db
         
@@ -38,9 +40,46 @@ class UserTaskRepository:
             result = self.db.execute(stmt)
             return result.scalar_one_or_none()
         
-    def get_all_user_tasks(self):
+    def get_all_user_tasks(
+        self,
+        query: UserTaskQueryParams,
+    ):
+
         stmt = select(UserTask)
+
+        filters = {
+            "user_id": UserTask.user_id,
+            "task_id": UserTask.task_id,
+            "created_by": UserTask.created_by,
+            "status": UserTask.status,
+        }
+
+        stmt = self.apply_filters(
+            stmt=stmt,
+            filters=filters,
+            query=query,
+        )
+
+
+        stmt = self.apply_sort(
+            stmt=stmt,
+            sortable_columns={
+                "status": UserTask.status,
+                "due_at": UserTask.due_at,
+                "created_at": UserTask.created_at,
+            },
+            sort_by=query.sort_by,
+            order=query.order,
+        )
+
+        stmt = self.apply_pagination(
+            stmt=stmt,
+            page=query.page,
+            limit=query.limit,
+        )
+
         result = self.db.execute(stmt)
+
         return result.scalars().all()
 
     def update_user_task(
@@ -57,4 +96,28 @@ class UserTaskRepository:
     ) -> None:
         self.db.delete(user_task)
         self.db.commit()
+        
+    
+    def get_user_tasks_by_user_id(
+        self,
+        user_id: UUID,
+    ):
+        stmt = select(UserTask).where(
+            UserTask.user_id == user_id
+        )
+        result = self.db.execute(stmt)
+
+        return result.scalars().all()
+    
+    
+    def get_user_tasks_by_creator(
+        self,
+        created_by: UUID,
+    ):
+        stmt = select(UserTask).where(
+            UserTask.created_by == created_by
+        )
+        result = self.db.execute(stmt)
+
+        return result.scalars().all()
 

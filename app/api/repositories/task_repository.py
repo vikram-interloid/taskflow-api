@@ -4,8 +4,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.models.task_model import Task
+from app.api.repositories.base_repository import BaseRepository
+from app.api.schemas.query_schema import TaskQueryParams
 
-class TaskRepository:
+class TaskRepository(BaseRepository):
     def __init__(self, db: Session):
         self.db = db
         
@@ -20,9 +22,54 @@ class TaskRepository:
         result = self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    def get_all_tasks(self):
+    def get_all_tasks(
+        self,
+        query: TaskQueryParams,
+    ):
+
         stmt = select(Task)
+
+        filters = {
+            "created_by": Task.created_by,
+        }
+
+        stmt = self.apply_filters(
+            stmt=stmt,
+            filters=filters,
+            query=query,
+        )
+
+        stmt = self.apply_search(
+            stmt=stmt,
+            search=query.search,
+            columns=[
+                Task.task_name,
+                Task.task_desc,
+            ],
+        )
+
+        # Sorting
+        sortable_columns = {
+            "task_name": Task.task_name,
+            "created_at": Task.created_at,
+        }
+
+        stmt = self.apply_sort(
+            stmt=stmt,
+            sortable_columns=sortable_columns,
+            sort_by=query.sort_by,
+            order=query.order,
+        )
+
+        # Pagination
+        stmt = self.apply_pagination(
+            stmt=stmt,
+            page=query.page,
+            limit=query.limit,
+        )
+
         result = self.db.execute(stmt)
+
         return result.scalars().all()
 
     

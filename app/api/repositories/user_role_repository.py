@@ -5,8 +5,10 @@ from sqlalchemy.orm import Session
 
 from app.api.models.roles_model import Role
 from app.api.models.user_role import UserRole
+from app.api.repositories.base_repository import BaseRepository
+from app.api.schemas.query_schema import UserRoleQueryParams
 
-class UserRoleRepository:
+class UserRoleRepository(BaseRepository):
 	def __init__(self,db: Session):
 		self.db = db
 
@@ -40,11 +42,43 @@ class UserRoleRepository:
 
 
 	def get_all_user_roles(
-			self
+		self,
+		query: UserRoleQueryParams,
 	):
-			stmt = select(UserRole)
-			result = self.db.execute(stmt)
-			return result.scalars().all()
+
+		stmt = select(UserRole)
+
+		filters = {
+			"user_id": UserRole.user_id,
+			"role_id": UserRole.role_id,
+			"assigned_by": UserRole.assigned_by,
+		}
+
+		stmt = self.apply_filters(
+			stmt=stmt,
+			filters=filters,
+			query=query,
+		)
+
+		stmt = self.apply_sort(
+			stmt=stmt,
+			sortable_columns={
+				"assigned_at": UserRole.assigned_at,
+			},
+			sort_by=query.sort_by,
+			order=query.order,
+		)
+
+		stmt = self.apply_pagination(
+			stmt=stmt,
+			page=query.page,
+			limit=query.limit,
+		)
+
+		result = self.db.execute(stmt)
+
+		return result.scalars().all()
+
 
 	def update_user_role(
 			self,

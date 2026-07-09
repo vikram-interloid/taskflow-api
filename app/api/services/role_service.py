@@ -2,6 +2,8 @@ from fastapi import HTTPException, status
 from uuid import UUID
 from sqlalchemy.orm import Session
 
+from app.api.repositories.cache_repository import CacheRepository
+
 from app.api.models.roles_model import Role
 from app.api.repositories.role_repository import RoleRepository
 from app.api.schemas.role_schema import RoleCreate, RoleUpdate
@@ -10,6 +12,7 @@ from app.api.schemas.role_schema import RoleCreate, RoleUpdate
 class RoleService:
     def __init__(self,db: Session):
         self.role_repository = RoleRepository(db)
+        self.cache_repository = CacheRepository()
         
     def create_role(self,roledata: RoleCreate) -> Role:
         
@@ -25,8 +28,14 @@ class RoleService:
             role_name = roledata.role_name,
         )
 
-        return self.role_repository.create_role(role)
+        role = self.role_repository.create_role(role)
         
+        self.cache_repository.delete_pattern(
+            "taskflow:cache:roles*"
+        )
+
+        return role
+                
         
     def get_role_by_id(self, role_id: UUID) -> Role:
         role = self.role_repository.get_role_by_id(role_id)
@@ -39,9 +48,34 @@ class RoleService:
 
         return role
     
-    def get_all_roles(self) -> list[Role]:
-        return self.role_repository.get_all_roles()
+    def get_all_roles(self):
         
+        cache_key = "taskflow:cache:roles"
+        
+        cached_roles = self.cache_repository.get(cache_key)
+        
+        if cached_roles is not None:
+            return cached_roles
+
+        roles = self.role_repository.get_all_roles(query)
+
+        role_list = [
+            {
+                "role_id": str(role.role_id),
+                "role_name": role.role_name,
+                "created_at": role.created_at.isoformat(),
+            }
+            for role in roles
+        ]
+
+        self.cache_repository.set(
+            key=cache_key,
+            value=role_list,
+            expire=3600,
+        )
+            
+        return self.role_repository.get_all_roles()
+            
     
     def update_role(
             self,
@@ -75,7 +109,13 @@ class RoleService:
         for key, value in update_data.items():
             setattr(role, key, value)
         
-        return self.role_repository.update_role(role) 
+        role = self.role_repository.update_role(role)
+
+        self.cache_repository.delete_pattern(
+            "taskflow:cache:roles*"
+        )
+
+        return role
     
     
     def delete_role(
@@ -91,6 +131,10 @@ class RoleService:
                 detail = 'Role not found'
             )
         
-        self.role_repository.delete_role(role) 
+        self.role_repository.delete_role(role)
+
+        self.cache_repository.delete_pattern(
+            "taskflow:cache:roles*"
+        )
         
         

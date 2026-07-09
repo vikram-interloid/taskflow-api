@@ -3,6 +3,8 @@ from uuid import UUID
 
 from pydantic import ConfigDict, BaseModel
 
+from app.api.enums.task_status import TaskStatus
+
 class UserTaskBase(BaseModel):
     task_id: UUID
     user_id: UUID
@@ -16,7 +18,7 @@ class UserTaskCreate(UserTaskBase):
 class UserTaskResponse(UserTaskBase):
     id: UUID
     created_at: datetime
-    status: str
+    status: TaskStatus
     completed_at: datetime | None = None
     created_by: UUID
     
@@ -24,7 +26,7 @@ class UserTaskResponse(UserTaskBase):
     
 class UserTaskUpdate(BaseModel):
     due_at: datetime | None = None
-    status: str | None = None
+    status: TaskStatus | None = None
     completed_at: datetime | None = None
 
     model_config = ConfigDict(extra="forbid")
