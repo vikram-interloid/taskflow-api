@@ -21,16 +21,8 @@ from app.api.routers.user_task_router import router as user_task_router
 
 
 app = FastAPI(
-    title = 'TaskFlow-API'
+    title = 'TaskFlow-API',
 )
-
-app.state.limiter = limiter
-
-app.add_exception_handler(RateLimitExceeded,_rate_limit_exceeded_handler)
-
-app.add_middleware(SlowAPIMiddleware)
-app.add_middleware(AuthMiddleware)
-
 
 app.include_router(auth_router)
 app.include_router(user_router)
@@ -38,6 +30,14 @@ app.include_router(role_router)
 app.include_router(task_router)
 app.include_router(user_role_router)
 app.include_router(user_task_router)
+
+
+app.state.limiter = limiter
+
+app.add_exception_handler(RateLimitExceeded,_rate_limit_exceeded_handler)
+
+app.add_middleware(SlowAPIMiddleware)
+app.add_middleware(AuthMiddleware)
 
 
 @app.get('/')
@@ -51,3 +51,4 @@ def home():
 def test_db(db: Session = Depends(get_db)):
     db.execute(text("SELECT 1"))
     return {"message": "Database connected successfully"}
+

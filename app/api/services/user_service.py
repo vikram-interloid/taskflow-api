@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.api.core.security import hash_password
 
 from app.api.schemas.query_schema import UserQueryParams
+from app.api.repositories.user_role_repository import UserRoleRepository
 from app.api.repositories.cache_repository import CacheRepository
 
 from app.api.models.users_model import User
@@ -14,6 +15,7 @@ from app.api.schemas.user_schema import UserCreate, UserUpdate
 class UserService:
     def __init__(self,db: Session):
         self.user_repository = UserRepository(db)
+        self.user_role_repository = UserRoleRepository(db)
         self.cache_repository = CacheRepository()
         
     def create_user(self,userdata: UserCreate) -> User:
@@ -129,7 +131,8 @@ class UserService:
     def update_user(
             self,
             user_id: UUID,
-            userdata: UserUpdate
+            userdata: UserUpdate,
+            current_user: User,
         ) -> User:
         
         user = self.user_repository.get_user_by_id(user_id)
@@ -139,6 +142,24 @@ class UserService:
                 status_code = status.HTTP_404_NOT_FOUND,
                 detail = 'User not found'
             )
+            
+            
+        roles = self.user_role_repository.get_roles_by_user_id(
+            current_user.user_id
+        )
+
+        is_admin = any(
+            role.role_name == "Admin"
+            for role in roles
+        )
+
+        if current_user.user_id != user.user_id and not is_admin:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not allowed to update this user",
+            )
+            
+            
         update_data = userdata.model_dump(exclude_unset = True)
         
         for key,value in update_data.items():
@@ -158,28 +179,44 @@ class UserService:
     
     
     def delete_user(
-            self,
-            user_id: UUID,
-        ) -> None:
-        
+        self,
+        user_id: UUID,
+        current_user: User,
+    ) -> None:
+
         user = self.user_repository.get_user_by_id(user_id)
-       
+
         if user is None:
             raise HTTPException(
-                status_code = status.HTTP_404_NOT_FOUND,
-                detail = 'User not found'
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found",
             )
 
-        user_id = user.user_id
+        roles = self.user_role_repository.get_roles_by_user_id(
+            current_user.user_id
+        )
+
+        is_admin = any(
+            role.role_name == "Admin"
+            for role in roles
+        )
+
+        if current_user.user_id != user.user_id and not is_admin:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not allowed to delete this user",
+            )
+
+        deleted_user_id = user.user_id
 
         self.user_repository.delete_user(user)
 
         self.cache_repository.delete(
-            f"taskflow:cache:user:{user_id}"
+            f"taskflow:cache:user:{deleted_user_id}"
         )
 
         self.cache_repository.delete_pattern(
             "taskflow:cache:users*"
         )
-        
+            
         

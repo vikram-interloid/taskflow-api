@@ -26,6 +26,7 @@ class UserTaskService:
     def create_user_task(
         self,
         user_task_data: UserTaskCreate,
+        current_user: User,
     ) -> UserTask:
         
         user = self.user_repository.get_user_by_id(user_task_data.user_id)
@@ -43,15 +44,6 @@ class UserTaskService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Task not found",
             )
-
-        creator = self.user_repository.get_user_by_id(user_task_data.created_by)
-        
-        if creator is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Created by user not found",
-            )
-
         
         existing = self.user_task_repository.get_user_task(
             user_task_data.user_id,
@@ -65,11 +57,11 @@ class UserTaskService:
             )
 
         user_task = UserTask(
-            task_id=user_task_data.task_id,
-            user_id=user_task_data.user_id,
-            due_at=user_task_data.due_at,
-            created_by=user_task_data.created_by,
-            status="pending",
+            task_id = user_task_data.task_id,
+            user_id = user_task_data.user_id,
+            due_at = user_task_data.due_at,
+            created_by = current_user.user_id,
+            status = "pending",
         )
 
         user_task = self.user_task_repository.create_user_task(user_task)
@@ -104,6 +96,8 @@ class UserTaskService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User task not found",
             )
+            
+        can_access_user_task(current_user, user_task)
 
         user_task_data = {
             "id": str(user_task.id),
@@ -117,8 +111,7 @@ class UserTaskService:
                 if user_task.completed_at
                 else None
             ),
-            "created_at": user_task.created_at.isoformat(),
-            "updated_at": user_task.updated_at.isoformat(),
+            "created_at": user_task.created_at.isoformat()
         }
 
         self.cache_repository.set(
@@ -169,7 +162,6 @@ class UserTaskService:
                     else None
                 ),
                 "created_at": item.created_at.isoformat(),
-                "updated_at": item.updated_at.isoformat(),
             }
             for item in user_tasks
         ]

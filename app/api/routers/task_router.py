@@ -73,10 +73,10 @@ def get_task_by_id(
 def update_task(
     task_id: UUID,
     task_data: TaskUpdate,
-    current_role=Depends(get_current_user),
+    current_role: User = Depends(get_current_user),
     service: TaskService = Depends(get_task_service),
 ):
-    return service.update_task(task_id, task_data)
+    return service.update_task(task_id, task_data, current_role)
 
 
 @router.delete(
@@ -85,9 +85,12 @@ def update_task(
 )
 def delete_task(
     task_id: UUID,
-    current_role=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     service: TaskService = Depends(get_task_service),
 ):
-    service.delete_task(task_id)
+    service.delete_task(
+        task_id=task_id,
+        current_user=current_user,
+    )
     
     

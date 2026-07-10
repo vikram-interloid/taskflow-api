@@ -12,6 +12,7 @@ from app.api.models.users_model import User
 from app.api.models.task_model import Task
 from app.api.repositories.task_repository import TaskRepository
 from app.api.repositories.user_repository import UserRepository
+from app.api.repositories.user_role_repository import UserRoleRepository
 from app.api.schemas.task_schema import TaskCreate, TaskUpdate
 
 
@@ -19,6 +20,7 @@ class TaskService:
     def __init__(self, db: Session):
         self.task_repository = TaskRepository(db)
         self.user_repository = UserRepository(db)
+        self.user_role_repository = UserRoleRepository(db)
         self.cache_repository = CacheRepository()
 
     def create_task(self, taskdata: TaskCreate,current_user: User) -> Task:
@@ -128,6 +130,7 @@ class TaskService:
         self,
         task_id: UUID,
         taskdata: TaskUpdate,
+        current_user: User,
     ) -> Task:
         task = self.task_repository.get_task_by_id(task_id)
 
@@ -135,6 +138,21 @@ class TaskService:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Task not found",
+            )
+            
+        roles = self.user_role_repository.get_roles_by_user_id(
+            current_user.user_id
+        )
+
+        is_admin = any(
+            role.role_name == "Admin"
+            for role in roles
+        )
+
+        if task.created_by != current_user.user_id and not is_admin:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not allowed to update this task",
             )
 
         update_data = taskdata.model_dump(exclude_unset=True)
@@ -167,13 +185,28 @@ class TaskService:
     
     
 
-    def delete_task(self, task_id: UUID) -> None:
+    def delete_task(self, task_id: UUID,current_user: User,) -> None:
         task = self.task_repository.get_task_by_id(task_id)
 
         if task is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Task not found",
+            )
+            
+        roles = self.user_role_repository.get_roles_by_user_id(
+            current_user.user_id
+        )
+
+        is_admin = any(
+            role.role_name == "Admin"
+            for role in roles
+        )
+
+        if task.created_by != current_user.user_id and not is_admin:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not allowed to delete this task",
             )
 
         self.task_repository.delete_task(task)

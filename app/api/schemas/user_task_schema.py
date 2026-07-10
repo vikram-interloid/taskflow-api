@@ -13,7 +13,7 @@ class UserTaskBase(BaseModel):
     model_config = ConfigDict(extra = "forbid")
     
 class UserTaskCreate(UserTaskBase):
-    created_by: UUID
+    pass
 
 class UserTaskResponse(UserTaskBase):
     id: UUID

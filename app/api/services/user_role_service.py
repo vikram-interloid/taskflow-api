@@ -4,6 +4,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from app.api.models.user_role import UserRole
+from app.api.schemas.query_schema import UserRoleQueryParams
 
 from app.api.repositories.user_repository import UserRepository
 from app.api.repositories.role_repository import RoleRepository
@@ -63,9 +64,9 @@ class UserRoleService:
             )
 
         user_role = UserRole(
-            user_id=user_role_data.user_id,
-            role_id=user_role_data.role_id,
-            assigned_by=user_role_data.assigned_by,
+            user_id = user_role_data.user_id,
+            role_id = user_role_data.role_id,
+            assigned_by = user_role_data.assigned_by,
         )
 
         return self.user_role_repository.create_user_role(
@@ -73,8 +74,11 @@ class UserRoleService:
         )
         
   
-    def get_all_user_roles(self):
-        return self.user_role_repository.get_all_user_roles()
+    def get_all_user_roles(
+        self,
+        query: UserRoleQueryParams,
+    ):
+        return self.user_role_repository.get_all_user_roles(query)
     
     
     def get_user_role_by_id(
@@ -85,8 +89,8 @@ class UserRoleService:
         
             if user_role is None:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="User role not found",
+                    status_code = status.HTTP_404_NOT_FOUND,
+                    detail = "User role not found",
                 )
             return user_role
   
@@ -112,8 +116,8 @@ class UserRoleService:
 
             if role is None:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Role not found",
+                    status_code = status.HTTP_404_NOT_FOUND,
+                    detail = "Role not found",
                 )
 
             duplicate = self.user_role_repository.get_user_role(
@@ -126,8 +130,8 @@ class UserRoleService:
                 and duplicate.id != user_role.id
             ):
                 raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail="User already has this role",
+                    status_code = status.HTTP_409_CONFLICT,
+                    detail = "User already has this role",
                 )
             
         for key, value in update_data.items():

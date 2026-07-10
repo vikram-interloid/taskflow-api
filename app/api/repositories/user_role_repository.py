@@ -63,7 +63,7 @@ class UserRoleRepository(BaseRepository):
 		stmt = self.apply_sort(
 			stmt=stmt,
 			sortable_columns={
-				"assigned_at": UserRole.assigned_at,
+				"created_at": UserRole.created_at,
 			},
 			sort_by=query.sort_by,
 			order=query.order,

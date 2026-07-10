@@ -3,6 +3,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
+from app.api.schemas.query_schema import UserTaskQueryParams
+
 from app.api.models.users_model import User
 from app.api.core.dependencies import get_current_user
 
@@ -27,10 +29,13 @@ def get_user_task_service(db: Session = Depends(get_db)) -> UserTaskService:
 )
 def create_user_task(
     user_task_data: UserTaskCreate,
-    current_role=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     service: UserTaskService = Depends(get_user_task_service),
 ):
-    return service.create_user_task(user_task_data)
+    return service.create_user_task(
+        user_task_data,
+        current_user,
+    )
 
 
 @router.get(
@@ -39,10 +44,11 @@ def create_user_task(
     status_code=status.HTTP_200_OK,
 )
 def get_all_user_tasks(
-    current_role=Depends(get_current_user),
+    query: UserTaskQueryParams = Depends(),
+    current_user: User = Depends(get_current_user),
     service: UserTaskService = Depends(get_user_task_service),
 ):
-    return service.get_all_user_tasks(current_role)
+    return service.get_all_user_tasks(query)
 
 
 @router.get(

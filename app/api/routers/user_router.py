@@ -7,6 +7,7 @@ from app.api.core.dependencies import get_current_user
 
 from app.api.schemas.query_schema import UserQueryParams
 
+from app.api.models.users_model import User
 from app.api.database.db_config import get_db
 from app.api.schemas.user_schema import UserCreate,UserResponse,UserUpdate
 from app.api.services.user_service import UserService
@@ -38,7 +39,7 @@ def create_user(
 )
 def get_all_users(
     query: UserQueryParams = Depends(),
-    current_role=Depends(get_current_user),
+    current_user=Depends(get_current_user),
     service: UserService = Depends(get_user_service)
 ):
     return service.get_all_users(query)
@@ -51,7 +52,7 @@ def get_all_users(
 )
 def get_user_by_id(
     user_id: UUID,
-    current_role=Depends(get_current_user),
+    current_user=Depends(get_current_user),
     service: UserService = Depends(get_user_service)
 ):
     return service.get_user_by_id(user_id)
@@ -65,10 +66,15 @@ def get_user_by_id(
 def update_user(
     user_id: UUID,
     user_data: UserUpdate,
-    current_role=Depends(get_current_user),
-    service: UserService = Depends(get_user_service)
+    current_user: User = Depends(get_current_user),
+    service: UserService = Depends(get_user_service),
 ):
-    return service.update_user(user_id,user_data)
+    
+    return service.update_user(
+        user_id = user_id,
+        userdata = user_data,
+        current_user = current_user,
+    )
 
 
 @router.delete(
@@ -77,7 +83,10 @@ def update_user(
 )
 def delete_user(
     user_id: UUID,
-    current_role=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     service: UserService = Depends(get_user_service)
 ):
-    service.delete_user(user_id)
+    service.delete_user(
+        user_id = user_id,
+        current_user = current_user,
+    )
