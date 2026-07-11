@@ -7,6 +7,7 @@ from app.api.models.task_model import Task
 from app.api.repositories.base_repository import BaseRepository
 from app.api.schemas.query_schema import TaskQueryParams
 
+
 class TaskRepository(BaseRepository):
     def __init__(self, db: Session):
         self.db = db

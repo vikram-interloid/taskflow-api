@@ -1,4 +1,5 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class PaginationParams(BaseModel):
     page: int = Field(default=1, ge=1)

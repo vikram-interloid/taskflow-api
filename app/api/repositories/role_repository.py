@@ -7,6 +7,7 @@ from app.api.models.roles_model import Role
 from app.api.repositories.base_repository import BaseRepository
 from app.api.schemas.query_schema import RoleQueryParams
 
+
 class RoleRepository(BaseRepository):
     
     def __init__(self, db: Session):

@@ -1,4 +1,3 @@
-from collections.abc import Callable
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -21,7 +20,7 @@ def require_roles(allowed_roles: list[str]):
 
         roles = repository.get_roles_by_user_id(current_user.user_id)
 
-        print("Roles from DB:", [r.role_name for r in roles])
+        print("Roles from DB:",[r.role_name for r in roles])
         print("Allowed:", allowed_roles)
 
         user_roles = [r.role_name for r in roles]

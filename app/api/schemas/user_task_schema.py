@@ -1,9 +1,10 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import ConfigDict, BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.api.enums.task_status import TaskStatus
+
 
 class UserTaskBase(BaseModel):
     task_id: UUID

@@ -7,6 +7,7 @@ from app.api.models.user_task import UserTask
 from app.api.repositories.base_repository import BaseRepository
 from app.api.schemas.query_schema import UserTaskQueryParams
 
+
 class UserTaskRepository(BaseRepository):
     def __init__(self, db: Session):
         self.db = db

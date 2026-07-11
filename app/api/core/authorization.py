@@ -3,6 +3,7 @@ from fastapi import HTTPException, status
 from app.api.models.user_task import UserTask
 from app.api.models.users_model import User
 
+
 def can_access_user_task(
     current_user: User,
     user_task: UserTask

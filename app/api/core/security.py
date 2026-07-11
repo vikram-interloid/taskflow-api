@@ -1,8 +1,8 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError, ExpiredSignatureError
+from jose import ExpiredSignatureError, JWTError, jwt
 from pwdlib import PasswordHash
 
 from app.api.core.config import settings
@@ -25,7 +25,7 @@ def create_access_token(data: dict) -> str:
     
     to_encode = data.copy()
     
-    expire = datetime.now(timezone.utc) + timedelta(
+    expire = datetime.now(UTC) + timedelta(
         minutes = settings.ACCESS_TOKEN_EXPIRE_MINUTES
     )
     
@@ -46,18 +46,18 @@ def decode_token(token: str) -> dict:
             algorithms = [settings.ALGORITHM]
         )
         return payload
-    except ExpiredSignatureError:
-        raise ValueError("Token has expired")
+    except ExpiredSignatureError as err:
+        raise ValueError("Token has expired")from err
     
-    except JWTError:
-        raise ValueError("Invalid token")
+    except JWTError as err :
+        raise ValueError("Invalid token") from err
     
     
 def create_refresh_token(data: dict) -> str:
     
     to_encode = data.copy()
 
-    expire = datetime.now(timezone.utc) + timedelta(
+    expire = datetime.now(UTC) + timedelta(
         days=settings.REFRESH_TOKEN_EXPIRE_DAYS,
     )
 

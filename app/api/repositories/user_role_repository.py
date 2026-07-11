@@ -8,6 +8,7 @@ from app.api.models.user_role import UserRole
 from app.api.repositories.base_repository import BaseRepository
 from app.api.schemas.query_schema import UserRoleQueryParams
 
+
 class UserRoleRepository(BaseRepository):
 	def __init__(self,db: Session):
 		self.db = db

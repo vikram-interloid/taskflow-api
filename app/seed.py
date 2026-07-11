@@ -1,17 +1,15 @@
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
-from app.api.database.db_config import SessionLocal
-
 from app.api.core.security import hash_password
-
-from app.api.models.roles_model import Role
-from app.api.models.users_model import User
-from app.api.models.user_role import UserRole
-from app.api.models.task_model import Task
-from app.api.models.user_task import UserTask
+from app.api.database.db_config import SessionLocal
 from app.api.enums.task_status import TaskStatus
+from app.api.models.roles_model import Role
+from app.api.models.task_model import Task
+from app.api.models.user_role import UserRole
+from app.api.models.user_task import UserTask
+from app.api.models.users_model import User
 
 
 def seed_database() -> None:
@@ -76,7 +74,7 @@ def seed_database() -> None:
         print("Roles created")
         print("Users created")
         
-                # -----------------------------
+        # -----------------------------
         # User Role Assignments
         # -----------------------------
 

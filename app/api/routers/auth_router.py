@@ -1,14 +1,15 @@
-from fastapi import APIRouter, Depends, status, Request
+from fastapi import APIRouter, Depends, Request, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
-
 from sqlalchemy.orm import Session
 
 from app.api.core.limiter import limiter
-
 from app.api.database.db_config import get_db
+from app.api.schemas.token_schema import (
+    AccessTokenResponse,
+    RefreshTokenRequest,
+    TokenResponse,
+)
 from app.api.services.auth_service import AuthService
-from app.api.schemas.token_schema import TokenResponse, AccessTokenResponse, RefreshTokenRequest
-
 
 router = APIRouter(
     prefix = '/auth',
@@ -42,10 +43,6 @@ def refresh_token(
     return service.refresh_access_token(
         request.refresh_token
     )
-    
-    
-    
-from fastapi import Response
 
 
 @router.post(

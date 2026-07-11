@@ -3,12 +3,11 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from app.api.enums.task_status import TaskStatus
-
-from sqlalchemy import TIMESTAMP, UUID, ForeignKey, String, UniqueConstraint, func, Enum
+from sqlalchemy import TIMESTAMP, UUID, Enum, ForeignKey, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.api.database.db_config import Base
+from app.api.enums.task_status import TaskStatus
 
 
 class UserTask(Base):

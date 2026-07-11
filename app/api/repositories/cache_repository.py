@@ -2,6 +2,7 @@ import json
 
 from app.api.database.redis import redis_client
 
+
 class CacheRepository:
     def get(
         self,

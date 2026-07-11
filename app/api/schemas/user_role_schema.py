@@ -3,6 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
+
 class UserRoleBase(BaseModel):
     user_id: UUID
     role_id: UUID

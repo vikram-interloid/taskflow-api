@@ -4,14 +4,11 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.api.core.dependencies import get_current_user
-from app.api.schemas.query_schema import TaskQueryParams
-
-from app.api.models.users_model import User
-from app.api.core.dependencies import get_current_user
 from app.api.database.db_config import get_db
-from app.api.schemas.task_schema import TaskCreate,TaskResponse,TaskUpdate
+from app.api.models.users_model import User
+from app.api.schemas.query_schema import TaskQueryParams
+from app.api.schemas.task_schema import TaskCreate, TaskResponse, TaskUpdate
 from app.api.services.task_service import TaskService
-
 
 router = APIRouter(
     prefix="/tasks",

@@ -5,13 +5,6 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 from app.api.database.db_config import DATABASE_URL, Base
 
-from app.api.models.refreshToken_model import RefreshToken  
-from app.api.models.roles_model import Role  
-from app.api.models.task_model import Task  
-from app.api.models.user_role import UserRole  
-from app.api.models.user_task import UserTask  
-from app.api.models.users_model import User 
-
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
