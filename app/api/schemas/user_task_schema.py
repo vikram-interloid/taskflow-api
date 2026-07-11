@@ -31,3 +31,5 @@ class UserTaskUpdate(BaseModel):
     completed_at: datetime | None = None
 
     model_config = ConfigDict(extra="forbid")
+    
+    

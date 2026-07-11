@@ -8,3 +8,4 @@ def rate_limit_key(request: Request) -> str:
         return f"user:{user.user_id}"
 
     return request.client.host
+

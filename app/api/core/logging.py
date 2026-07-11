@@ -1,5 +1,4 @@
 import logging
-import sys
 
 from app.api.core.request_context import (
     method_ctx,
@@ -20,9 +19,9 @@ LOG_FORMAT = (
 
 class RequestContextFilter(logging.Filter):
     def filter(self, record):
-        record.request_id = request_id_ctx.get()
-        record.method = method_ctx.get()
-        record.path = path_ctx.get()
+        record.request_id = request_id_ctx.get("-")
+        record.method = method_ctx.get("-")
+        record.path = path_ctx.get("-")
         return True
 
 
@@ -32,16 +31,23 @@ def setup_logging():
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(formatter)
-    handler.addFilter(RequestContextFilter())
+    file_handler = logging.FileHandler(
+        "app.log",
+        mode="a"
+    )
+
+    file_handler.setFormatter(formatter)
+    file_handler.addFilter(RequestContextFilter())
 
     root_logger = logging.getLogger()
+
     root_logger.handlers.clear()
     root_logger.setLevel(logging.INFO)
-    root_logger.addHandler(handler)
+
+    root_logger.addHandler(file_handler)
 
 
 def get_logger(name: str):
     return logging.getLogger(name)
+
 

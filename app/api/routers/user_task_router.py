@@ -3,6 +3,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
+
+
 from app.api.core.dependencies import get_current_user
 from app.api.database.db_config import get_db
 from app.api.models.users_model import User
@@ -50,7 +52,7 @@ def get_all_user_tasks(
     current_user: User = Depends(get_current_user),
     service: UserTaskService = Depends(get_user_task_service),
 ):
-    return service.get_all_user_tasks(query)
+    return service.get_all_user_tasks(query,current_user)
 
 
 @router.get(
@@ -94,4 +96,5 @@ def delete_user_task(
     service: UserTaskService = Depends(get_user_task_service),
 ):
     service.delete_user_task(user_task_id,current_role)
+    
     

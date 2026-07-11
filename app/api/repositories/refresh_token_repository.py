@@ -28,3 +28,5 @@ class RefreshRepository:
     ) -> None:
         
         redis_client.delete(f"{self.PREFIX}:{user_id}")
+        
+        

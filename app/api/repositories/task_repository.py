@@ -49,7 +49,6 @@ class TaskRepository(BaseRepository):
             ],
         )
 
-        # Sorting
         sortable_columns = {
             "task_name": Task.task_name,
             "created_at": Task.created_at,
@@ -62,7 +61,6 @@ class TaskRepository(BaseRepository):
             order=query.order,
         )
 
-        # Pagination
         stmt = self.apply_pagination(
             stmt=stmt,
             page=query.page,
@@ -83,4 +81,5 @@ class TaskRepository(BaseRepository):
     def delete_task(self, task: Task) -> None:
         self.db.delete(task)
         self.db.commit()
+        
         

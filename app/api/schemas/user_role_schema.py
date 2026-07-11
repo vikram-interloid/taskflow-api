@@ -24,3 +24,5 @@ class UserRoleUpdate(BaseModel):
     role_id: UUID | None = None
 
     model_config = ConfigDict(extra="forbid")
+    
+    

@@ -77,3 +77,5 @@ class User(Base):
         back_populates="assigned_by_user",
         foreign_keys="UserRole.assigned_by",
     )
+    
+    

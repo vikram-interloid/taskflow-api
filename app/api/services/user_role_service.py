@@ -126,7 +126,6 @@ class UserRoleService:
             "Fetching user-role mappings (page=%s, limit=%s, search=%s)",
             query.page,
             query.limit,
-            query.search,
         )
 
         user_roles = self.user_role_repository.get_all_user_roles(
@@ -225,7 +224,7 @@ class UserRoleService:
 
                 if (
                     duplicate
-                    and duplicate.user_role_id != user_role.user_role_id
+                    and duplicate.id != user_role.id
                 ):
                     logger.warning(
                         "User %s already has role %s",
@@ -251,7 +250,7 @@ class UserRoleService:
 
             logger.info(
                 "Updated user-role mapping %s",
-                user_role.user_role_id,
+                user_role.id,
             )
 
             if update_data:

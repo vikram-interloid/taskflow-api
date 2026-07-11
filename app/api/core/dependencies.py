@@ -15,24 +15,32 @@ def get_current_user(
 ) -> User:
     try:
         payload = decode_token(token)
-        
+
     except ValueError as err:
         raise HTTPException(
-            status_code = status.HTTP_401_UNAUTHORIZED,
-            detail = "Invalid or expired token",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
         ) from err
-        
+
+    if payload.get("type") != "access":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Access token required",
+        )
+
     user_id = payload.get("sub")
-        
+
     if user_id is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload",
         )
-    
+
     repository = UserRepository(db)
-    
-    user = repository.get_user_by_id(UUID(user_id))
+
+    user = repository.get_user_by_id(
+        UUID(user_id),
+    )
 
     if user is None:
         raise HTTPException(
@@ -41,4 +49,3 @@ def get_current_user(
         )
 
     return user
-

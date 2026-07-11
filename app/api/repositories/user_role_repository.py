@@ -105,3 +105,4 @@ class UserRoleRepository(BaseRepository):
 		)
 		result = self.db.execute(stmt)
 		return result.scalars().all()
+

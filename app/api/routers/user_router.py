@@ -88,3 +88,4 @@ def delete_user(
         user_id = user_id,
         current_user = current_user,
     )
+

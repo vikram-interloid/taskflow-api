@@ -7,6 +7,7 @@ from app.api.core.logging import get_logger
 
 from app.api.core.security import hash_password
 from app.api.models.users_model import User
+from app.api.enums.roles import RoleName
 from app.api.repositories.cache_repository import CacheRepository
 from app.api.repositories.user_repository import UserRepository
 from app.api.repositories.user_role_repository import UserRoleRepository
@@ -263,7 +264,7 @@ class UserService:
         )
 
         is_admin = any(
-            role.role_name == "Admin"
+            role.role_name == RoleName.ADMIN
             for role in roles
         )
 
@@ -357,7 +358,7 @@ class UserService:
         )
 
         is_admin = any(
-            role.role_name == "Admin"
+            role.role_name == RoleName.ADMIN
             for role in roles
         )
 

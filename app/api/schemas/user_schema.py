@@ -36,3 +36,5 @@ class UserUpdate(BaseModel):
 
     model_config = ConfigDict(extra = 'forbid')
     
+    
+    

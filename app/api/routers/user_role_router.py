@@ -3,6 +3,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
+from app.api.enums.roles import RoleName
+
 from app.api.core.rbac import require_roles
 from app.api.database.db_config import get_db
 from app.api.models.users_model import User
@@ -33,8 +35,10 @@ def get_user_role_service(
 )
 def create_user_role(
     user_role_data: UserRoleCreate,
-    current_user: User = Depends(require_roles(["admin", "manager"])),
     service: UserRoleService = Depends(get_user_role_service),
+    current_user: User = Depends(
+        require_roles([RoleName.ADMIN])
+    )
 ):
     return service.create_user_role(user_role_data)
 
@@ -46,8 +50,13 @@ def create_user_role(
 )
 def get_all_user_roles(
     query: UserRoleQueryParams = Depends(),
-    current_user: User = Depends(require_roles(["admin", "manager"])),
     service: UserRoleService = Depends(get_user_role_service),
+    current_user: User = Depends(
+        require_roles([
+            RoleName.ADMIN,
+            RoleName.MANAGER,
+        ])
+    )
 ):
     return service.get_all_user_roles(query)
 
@@ -59,8 +68,13 @@ def get_all_user_roles(
 )
 def get_user_role_by_id(
     user_role_id: UUID,
-    current_user: User = Depends(require_roles(["admin", "manager"])),
     service: UserRoleService = Depends(get_user_role_service),
+    current_user: User = Depends(
+        require_roles([
+            RoleName.ADMIN,
+            RoleName.MANAGER,
+        ])
+    )
 ):
     return service.get_user_role_by_id(user_role_id)
 
@@ -73,8 +87,10 @@ def get_user_role_by_id(
 def update_user_role(
     user_role_id: UUID,
     user_role_data: UserRoleUpdate,
-    current_user: User = Depends(require_roles(["admin", "manager"])),
     service: UserRoleService = Depends(get_user_role_service),
+    current_user: User = Depends(
+        require_roles([RoleName.ADMIN])
+    )
 ):
     return service.update_user_role(
         user_role_id,
@@ -88,7 +104,13 @@ def update_user_role(
 )
 def delete_user_role(
     user_role_id: UUID,
-    current_user: User = Depends(require_roles(["admin", "manager"])),
     service: UserRoleService = Depends(get_user_role_service),
+    current_user: User = Depends(
+        require_roles([
+            RoleName.ADMIN
+            ])
+    )
 ):
     service.delete_user_role(user_role_id)
+    
+    

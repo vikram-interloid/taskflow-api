@@ -2,6 +2,7 @@ from fastapi import HTTPException, status
 
 from app.api.models.user_task import UserTask
 from app.api.models.users_model import User
+from app.api.enums.roles import RoleName
 
 
 def can_access_user_task(
@@ -10,7 +11,7 @@ def can_access_user_task(
 ) -> None:
     
     if any(
-        user_role.role.role_name == "Admin"
+        user_role.role.role_name == RoleName.ADMIN
         for user_role in current_user.user_roles
     ):
         return

@@ -69,3 +69,5 @@ class UserRole(Base):
         foreign_keys=[assigned_by],
         back_populates="assigned_roles",
     )
+    
+    

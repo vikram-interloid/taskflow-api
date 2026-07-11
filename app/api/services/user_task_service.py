@@ -8,9 +8,11 @@ from app.api.core.logging import get_logger
 from app.api.core.authorization import can_access_user_task
 from app.api.models.user_task import UserTask
 from app.api.models.users_model import User
+from app.api.enums.roles import RoleName
 from app.api.repositories.cache_repository import CacheRepository
 from app.api.repositories.task_repository import TaskRepository
 from app.api.repositories.user_repository import UserRepository
+from app.api.repositories.user_role_repository import UserRoleRepository
 from app.api.repositories.user_task_repository import UserTaskRepository
 from app.api.schemas.query_schema import UserTaskQueryParams
 from app.api.schemas.user_task_schema import UserTaskCreate, UserTaskUpdate
@@ -22,6 +24,7 @@ class UserTaskService:
         self.user_task_repository = UserTaskRepository(db)
         self.user_repository = UserRepository(db)
         self.task_repository = TaskRepository(db)
+        self.user_role_repository = UserRoleRepository(db)
         self.cache_repository = CacheRepository()
 
     def create_user_task(
@@ -119,6 +122,31 @@ class UserTaskService:
         current_user: User,
     ):
 
+        logger.info(
+            "Fetching user-task %s",
+            user_task_id,
+        )
+
+        user_task = self.user_task_repository.get_user_task_by_id(
+            user_task_id,
+        )
+
+        if user_task is None:
+            logger.warning(
+                "User-task %s not found",
+                user_task_id,
+            )
+
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User task not found",
+            )
+
+        can_access_user_task(
+            current_user,
+            user_task,
+        )
+
         cache_key = f"taskflow:cache:user_task:{user_task_id}"
 
         logger.info(
@@ -141,26 +169,6 @@ class UserTaskService:
         logger.info(
             "Cache MISS '%s'",
             cache_key,
-        )
-
-        user_task = self.user_task_repository.get_user_task_by_id(
-            user_task_id,
-        )
-
-        if user_task is None:
-            logger.warning(
-                "User task %s not found",
-                user_task_id,
-            )
-
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User task not found",
-            )
-
-        can_access_user_task(
-            current_user,
-            user_task,
         )
 
         logger.info(
@@ -199,13 +207,24 @@ class UserTaskService:
         )
 
         return user_task_data
-    
+        
     
 
     def get_all_user_tasks(
         self,
         query: UserTaskQueryParams,
+        current_user: User,
     ):
+        roles = self.user_role_repository.get_roles_by_user_id(
+        current_user.user_id,
+    )
+        
+        is_admin = any(
+            role.role_name == RoleName.ADMIN
+            for role in roles
+        )
+        if not is_admin:
+            query.user_id = current_user.user_id
 
         cache_key = (
             f"taskflow:cache:user_tasks:"

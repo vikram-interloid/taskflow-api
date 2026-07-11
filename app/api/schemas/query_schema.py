@@ -11,9 +11,7 @@ class TaskQueryParams(PaginationParams):
     
     status: TaskStatus | None = None
     created_by: UUID | None = None
-
     search: str | None = None
-
     sort_by: str = "created_at"
     order: str = "desc"
 
@@ -24,9 +22,7 @@ class TaskQueryParams(PaginationParams):
 class UserQueryParams(PaginationParams):
     
     email: str | None = None
-
     search: str | None = None
-
     sort_by: Literal[
         "user_name",
         "email",
@@ -39,7 +35,6 @@ class UserQueryParams(PaginationParams):
 class RoleQueryParams(PaginationParams):
     
     search: str | None = None
-
     sort_by: Literal[
         "role_name",
         "created_at",
@@ -53,7 +48,6 @@ class UserRoleQueryParams(PaginationParams):
     user_id: UUID | None = None
     role_id: UUID | None = None
     assigned_by: UUID | None = None
-
     sort_by: Literal[
         "assigned_at",
     ] = "assigned_at"
@@ -70,9 +64,7 @@ class UserTaskQueryParams(PaginationParams):
     task_id: UUID | None = None
     created_by: UUID | None = None
     status: TaskStatus | None = None
-
     search: str | None = None
-
     sort_by: Literal[
         "status",
         "due_at",
@@ -83,3 +75,6 @@ class UserTaskQueryParams(PaginationParams):
         "asc",
         "desc",
     ] = "desc"
+    
+    
+    
