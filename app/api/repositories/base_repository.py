@@ -2,12 +2,14 @@ from sqlalchemy import Select, asc, desc, or_
 
 
 class BaseRepository:
+    
     @staticmethod
     def apply_filters(
         stmt: Select,
         filters: dict,
         query,
     ) -> Select:
+        
         """
         filters example:
         {
@@ -24,12 +26,14 @@ class BaseRepository:
 
         return stmt
 
+
     @staticmethod
     def apply_search(
         stmt: Select,
         search: str | None,
         columns: list,
     ) -> Select:
+        
         if not search:
             return stmt
 
@@ -43,6 +47,7 @@ class BaseRepository:
         )
 
         return stmt
+
 
     @staticmethod
     def apply_sort(
@@ -61,6 +66,7 @@ class BaseRepository:
             return stmt.order_by(asc(column))
 
         return stmt.order_by(desc(column))
+    
 
     @staticmethod
     def apply_pagination(

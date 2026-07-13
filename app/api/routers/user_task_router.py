@@ -3,7 +3,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-
+from app.api.core.rbac import require_roles
+from app.api.enums.roles import RoleName
 
 from app.api.core.dependencies import get_current_user
 from app.api.database.db_config import get_db
@@ -33,7 +34,12 @@ def get_user_task_service(db: Session = Depends(get_db)) -> UserTaskService:
 )
 def create_user_task(
     user_task_data: UserTaskCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+            require_roles([
+                RoleName.ADMIN, 
+                RoleName.MANAGER
+            ])
+    ),    
     service: UserTaskService = Depends(get_user_task_service),
 ):
     return service.create_user_task(
@@ -49,7 +55,12 @@ def create_user_task(
 )
 def get_all_user_tasks(
     query: UserTaskQueryParams = Depends(),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+            require_roles([
+                RoleName.ADMIN, 
+                RoleName.MANAGER
+            ])
+    ),
     service: UserTaskService = Depends(get_user_task_service),
 ):
     return service.get_all_user_tasks(query,current_user)
@@ -62,10 +73,15 @@ def get_all_user_tasks(
 )
 def get_user_task_by_id(
     user_task_id: UUID,
-    current_role=Depends(get_current_user),
+    current_user: User = Depends(
+        require_roles([
+            RoleName.ADMIN, 
+            RoleName.MANAGER
+        ])
+    ),
     service: UserTaskService = Depends(get_user_task_service),
 ):
-    return service.get_user_task_by_id(user_task_id,current_role)
+    return service.get_user_task_by_id(user_task_id,current_user)
 
 
 @router.patch(
@@ -76,13 +92,18 @@ def get_user_task_by_id(
 def update_user_task(
     user_task_id: UUID,
     user_task_data: UserTaskUpdate,
-    current_role=Depends(get_current_user),
+    current_user: User = Depends(
+        require_roles([
+            RoleName.ADMIN, 
+            RoleName.MANAGER
+        ])
+    ),
     service: UserTaskService = Depends(get_user_task_service),
 ):
     return service.update_user_task(
         user_task_id,
         user_task_data,
-        current_role
+        current_user
     )
 
 
@@ -92,9 +113,14 @@ def update_user_task(
 )
 def delete_user_task(
     user_task_id: UUID,
-    current_role=Depends(get_current_user),
+    current_user: User = Depends(
+        require_roles([
+            RoleName.ADMIN, 
+            RoleName.MANAGER
+        ])
+    ),
     service: UserTaskService = Depends(get_user_task_service),
 ):
-    service.delete_user_task(user_task_id,current_role)
+    service.delete_user_task(user_task_id,current_user)
     
     

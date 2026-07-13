@@ -34,7 +34,7 @@ def require_roles(allowed_roles: list[RoleName]):
         if user_roles.isdisjoint(allowed):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Insufficient permissions",
+                detail="Permission required",
             )
 
         return current_user
