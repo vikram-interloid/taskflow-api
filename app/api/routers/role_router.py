@@ -27,7 +27,7 @@ def get_role_service(
 
 
 @router.post(
-    "/",
+    "",
     response_model=RoleResponse,
     status_code=status.HTTP_201_CREATED
 )
@@ -44,7 +44,7 @@ def create_role(
 
 
 @router.get(
-    "/",
+    "",
     response_model=list[RoleResponse]
 )
 def get_roles(

@@ -56,10 +56,7 @@ def create_user_task(
 def get_all_user_tasks(
     query: UserTaskQueryParams = Depends(),
     current_user: User = Depends(
-            require_roles([
-                RoleName.ADMIN, 
-                RoleName.MANAGER
-            ])
+            get_current_user
     ),
     service: UserTaskService = Depends(get_user_task_service),
 ):
@@ -74,10 +71,7 @@ def get_all_user_tasks(
 def get_user_task_by_id(
     user_task_id: UUID,
     current_user: User = Depends(
-        require_roles([
-            RoleName.ADMIN, 
-            RoleName.MANAGER
-        ])
+        get_current_user
     ),
     service: UserTaskService = Depends(get_user_task_service),
 ):
@@ -93,10 +87,7 @@ def update_user_task(
     user_task_id: UUID,
     user_task_data: UserTaskUpdate,
     current_user: User = Depends(
-        require_roles([
-            RoleName.ADMIN, 
-            RoleName.MANAGER
-        ])
+        get_current_user
     ),
     service: UserTaskService = Depends(get_user_task_service),
 ):
