@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.api.core.dependencies import get_current_user
 from app.api.database.db_config import get_db
+from app.api.core.rbac import require_roles
+from app.api.enums.roles import RoleName
 from app.api.models.users_model import User
 from app.api.schemas.query_schema import UserQueryParams
 from app.api.schemas.user_schema import UserCreate, UserResponse, UserUpdate
@@ -26,6 +28,11 @@ def get_user_service(db: Session = Depends(get_db),) -> UserService:
 )
 def create_user(
     user_data: UserCreate,
+    current_user: User = Depends(
+        require_roles([
+            RoleName.ADMIN
+        ])
+    ),
     service: UserService = Depends(get_user_service)
 ):
     return service.create_user(user_data)
@@ -37,10 +44,12 @@ def create_user(
 )
 def get_all_users(
     query: UserQueryParams = Depends(),
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(
+        get_current_user
+    ),
     service: UserService = Depends(get_user_service)
 ):
-    return service.get_all_users(query)
+    return service.get_all_users(query,current_user)
 
 
 @router.get(
@@ -50,10 +59,12 @@ def get_all_users(
 )
 def get_user_by_id(
     user_id: UUID,
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(
+        get_current_user
+    ),
     service: UserService = Depends(get_user_service)
 ):
-    return service.get_user_by_id(user_id)
+    return service.get_user_by_id(user_id,current_user)
 
 
 @router.patch(
@@ -64,7 +75,11 @@ def get_user_by_id(
 def update_user(
     user_id: UUID,
     user_data: UserUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+        require_roles([
+            RoleName.ADMIN
+        ])
+    ),
     service: UserService = Depends(get_user_service),
 ):
     
@@ -81,7 +96,11 @@ def update_user(
 )
 def delete_user(
     user_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+        require_roles([
+            RoleName.ADMIN
+        ])
+    ),
     service: UserService = Depends(get_user_service)
 ):
     service.delete_user(

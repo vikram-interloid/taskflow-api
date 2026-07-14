@@ -50,15 +50,10 @@ def create_role(
 def get_roles(
     query: RoleQueryParams = Depends(),
     service: RoleService = Depends(get_role_service),
-    current_user: User = Depends(
-            require_roles([
-                RoleName.ADMIN,
-                RoleName.MANAGER,
-            ])
-        )    
+    current_user: User = Depends(get_current_user)    
 ):
 
-    return service.get_all_roles(query)
+    return service.get_all_roles(query,current_user)
 
 
 
@@ -69,16 +64,12 @@ def get_roles(
 def get_role(
     role_id: UUID,
     service: RoleService = Depends(get_role_service),
-    current_user: User = Depends(
-            require_roles([
-                RoleName.ADMIN,
-                RoleName.MANAGER,
-            ])
-        )    
+    current_user: User = Depends(get_current_user)   
 ):
 
     return service.get_role_by_id(
-        role_id
+        role_id,
+        current_user,
     )
 
 

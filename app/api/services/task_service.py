@@ -7,6 +7,7 @@ from app.api.core.logging import get_logger
 from app.api.models.task_model import Task
 from app.api.models.users_model import User
 from app.api.enums.roles import RoleName
+from app.api.core.authorization import can_access_task, is_admin, is_manager
 from app.api.repositories.cache_repository import CacheRepository
 from app.api.repositories.task_repository import TaskRepository
 from app.api.repositories.user_repository import UserRepository
@@ -80,6 +81,7 @@ class TaskService:
     def get_task_by_id(
         self,
         task_id: UUID,
+        current_user: User
     ) -> dict:
 
         logger.info(
@@ -125,6 +127,11 @@ class TaskService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Task not found",
             )
+            
+        can_access_task(
+            current_user,
+            task,
+        )
 
         logger.info(
             "Retrieved task '%s' (%s) from database",
@@ -157,10 +164,17 @@ class TaskService:
     def get_all_tasks(
         self,
         query: TaskQueryParams,
+        current_user: User
     ) -> list[dict]:
+        
+        if not is_admin(current_user):
+            query.created_by = current_user.user_id
 
         cache_key = (
             f"taskflow:cache:tasks:"
+            f"admin={is_admin(current_user)}:"
+            f"manager={is_manager(current_user)}:"
+            f"user={current_user.user_id}:"
             f"page={query.page}:"
             f"limit={query.limit}:"
             f"search={query.search}:"
@@ -190,9 +204,7 @@ class TaskService:
             cache_key,
         )
 
-        tasks = self.task_repository.get_all_tasks(
-            query,
-        )
+        tasks = self.task_repository.get_all_tasks(query)
 
         logger.info(
             "Retrieved %d tasks from database",

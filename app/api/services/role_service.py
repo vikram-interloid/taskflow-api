@@ -5,9 +5,12 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api.core.logging import get_logger
+from app.api.core.authorization import can_access_role,is_admin
 from app.api.models.roles_model import Role
+from app.api.models.users_model import User
 from app.api.repositories.cache_repository import CacheRepository
 from app.api.repositories.role_repository import RoleRepository
+from app.api.repositories.user_role_repository import UserRoleRepository
 from app.api.schemas.query_schema import RoleQueryParams
 from app.api.schemas.role_schema import RoleCreate, RoleUpdate
 
@@ -16,6 +19,7 @@ logger = get_logger(__name__)
 class RoleService:
     def __init__(self, db: Session):
         self.role_repository = RoleRepository(db)
+        self.user_role_repository = UserRoleRepository(db)
         self.cache_repository = CacheRepository()
 
     def create_role(
@@ -66,11 +70,13 @@ class RoleService:
 
         return role
 
+    
     def get_role_by_id(
         self,
         role_id: UUID,
+        current_user: User,
     ) -> Role:
-
+    
         logger.info(
             "Fetching role %s",
             role_id,
@@ -90,6 +96,7 @@ class RoleService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Role not found",
             )
+        can_access_role(current_user,role)
 
         logger.info(
             "Retrieved role %s",
@@ -101,15 +108,18 @@ class RoleService:
     def get_all_roles(
         self,
         query: RoleQueryParams,
+        current_user: User,
     ) -> list[dict[str, Any]]:
 
         cache_key = (
             f"taskflow:cache:roles:"
-            f"{query.search}:"
-            f"{query.sort_by}:"
-            f"{query.order}:"
-            f"{query.page}:"
-            f"{query.limit}"
+            f"admin={is_admin(current_user)}:"
+            f"user={current_user.user_id}:"
+            f"search={query.search}:"
+            f"sort={query.sort_by}:"
+            f"order={query.order}:"
+            f"page={query.page}:"
+            f"limit={query.limit}"
         )
 
         logger.info(
@@ -133,9 +143,13 @@ class RoleService:
             cache_key,
         )
 
-        roles = self.role_repository.get_all_roles(
-            query,
-        )
+        if is_admin(current_user):
+            roles = self.role_repository.get_all_roles(query)
+
+        else:
+            roles = self.user_role_repository.get_roles_by_user_id(
+                current_user.user_id
+            )
 
         logger.info(
             "Retrieved %d roles from database",

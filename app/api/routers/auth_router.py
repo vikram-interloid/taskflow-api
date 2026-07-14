@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Request, Response, status
-from fastapi.security import OAuth2PasswordRequestForm
+# from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app.api.core.limiter import limiter
@@ -8,6 +8,7 @@ from app.api.schemas.token_schema import (
     AccessTokenResponse,
     RefreshTokenRequest,
     TokenResponse,
+    LoginRequest
 )
 from app.api.services.auth_service import AuthService
 
@@ -26,10 +27,11 @@ def get_auth_service(db: Session = Depends(get_db),) -> AuthService:
 @limiter.limit("5/minute")
 def login(
     request: Request,
-    form_data: OAuth2PasswordRequestForm = Depends(),
+    login_data: LoginRequest,
+    # form_data: OAuth2PasswordRequestForm = Depends(),
     service: AuthService = Depends(get_auth_service),
 ):
-    return service.login(form_data)
+    return service.login(login_data)
 
 
 @router.post(

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.api.core.logging import get_logger
 
 from app.api.core.security import hash_password
+from app.api.core.authorization import can_access_user, is_admin
 from app.api.models.users_model import User
 from app.api.enums.roles import RoleName
 from app.api.repositories.cache_repository import CacheRepository
@@ -93,6 +94,7 @@ class UserService:
     def get_user_by_id(
         self,
         user_id: UUID,
+        current_user: User
     ) -> User | dict:
 
         cache_key = f"taskflow:cache:user:{user_id}"
@@ -133,6 +135,8 @@ class UserService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found",
             )
+        
+        can_access_user(current_user, user)
 
         logger.info(
             "Retrieved user '%s' (%s) from database",
@@ -165,10 +169,13 @@ class UserService:
     def get_all_users(
         self,
         query: UserQueryParams,
+        current_user: User
     ) -> list[dict]:
 
         cache_key = (
             f"taskflow:cache:users:"
+            f"admin={is_admin(current_user)}:"
+            f"user={current_user.user_id}:"
             f"page={query.page}:"
             f"limit={query.limit}:"
             f"search={query.search}:"
@@ -198,9 +205,14 @@ class UserService:
             cache_key,
         )
 
-        users = self.user_repository.get_all_users(
-            query,
-        )
+        if is_admin(current_user):
+            users = self.user_repository.get_all_users(query)
+        else:
+            users = [
+                self.user_repository.get_user_by_id(
+                    current_user.user_id
+                )
+            ]
 
         logger.info(
             "Retrieved %d users from database",

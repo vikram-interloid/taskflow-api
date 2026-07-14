@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.api.core.dependencies import get_current_user
 from app.api.database.db_config import get_db
+from app.api.core.rbac import require_roles
+from app.api.enums.roles import RoleName
 from app.api.models.users_model import User
 from app.api.schemas.query_schema import TaskQueryParams
 from app.api.schemas.task_schema import TaskCreate, TaskResponse, TaskUpdate
@@ -29,10 +31,15 @@ def get_task_service(
 )
 def create_task(
     task_data: TaskCreate,
-    current_role: User = Depends(get_current_user),
+    current_user: User = Depends(
+        require_roles([
+            RoleName.ADMIN,
+            RoleName.MANAGER,
+        ])
+    ),
     service: TaskService = Depends(get_task_service),
 ):
-    return service.create_task(task_data,current_role)
+    return service.create_task(task_data,current_user)
 
 
 @router.get(
@@ -42,11 +49,13 @@ def create_task(
 )
 def get_all_tasks(
     query: TaskQueryParams = Depends(),
-    current_role=Depends(get_current_user),
+    current_user: User = Depends(
+        get_current_user
+    ),
     service: TaskService = Depends(get_task_service),
 ):
     
-    return service.get_all_tasks(query)
+    return service.get_all_tasks(query, current_user)
 
 
 @router.get(
@@ -56,10 +65,12 @@ def get_all_tasks(
 )
 def get_task_by_id(
     task_id: UUID,
-    current_role=Depends(get_current_user),
+    current_user: User = Depends(
+        get_current_user
+    ),
     service: TaskService = Depends(get_task_service),
 ):
-    return service.get_task_by_id(task_id)
+    return service.get_task_by_id(task_id, current_user)
 
 
 @router.patch(
@@ -70,10 +81,15 @@ def get_task_by_id(
 def update_task(
     task_id: UUID,
     task_data: TaskUpdate,
-    current_role: User = Depends(get_current_user),
+    current_user: User = Depends(
+        require_roles([
+            RoleName.ADMIN,
+            RoleName.MANAGER,
+        ])
+    ),
     service: TaskService = Depends(get_task_service),
 ):
-    return service.update_task(task_id, task_data, current_role)
+    return service.update_task(task_id, task_data, current_user)
 
 
 @router.delete(
@@ -82,7 +98,12 @@ def update_task(
 )
 def delete_task(
     task_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+        require_roles([
+            RoleName.ADMIN,
+            RoleName.MANAGER,
+        ])
+    ),
     service: TaskService = Depends(get_task_service),
 ):
     service.delete_task(

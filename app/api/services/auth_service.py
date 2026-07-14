@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from fastapi import HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+# from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app.api.core.logging import get_logger
@@ -15,7 +15,7 @@ from app.api.core.security import (
 )
 from app.api.repositories.refresh_token_repository import RefreshRepository
 from app.api.repositories.user_repository import UserRepository
-
+from app.api.schemas.token_schema import LoginRequest
 
 logger = get_logger(__name__)
 
@@ -27,22 +27,22 @@ class AuthService:
         
     def login(
         self,
-        form_data: OAuth2PasswordRequestForm,
-    ):
+        login_data: LoginRequest
+    ) -> dict:
 
         logger.info(
             "Login attempt for '%s'",
-            form_data.username,
+            login_data.email,
         )
 
         user = self.user_repository.get_user_by_email(
-            form_data.username,
+            login_data.email,
         )
 
         if user is None:
             logger.warning(
                 "Login failed for '%s': user not found",
-                form_data.username,
+                login_data.email,
             )
 
             raise HTTPException(
@@ -51,12 +51,12 @@ class AuthService:
             )
 
         if not verify_password(
-            form_data.password,
+            login_data.password,
             user.password_hash,
         ):
             logger.warning(
                 "Login failed for '%s': invalid password",
-                form_data.username,
+                login_data.email,
             )
 
             raise HTTPException(
@@ -102,7 +102,7 @@ class AuthService:
     def refresh_access_token(
         self,
         refresh_token: str,
-    ):
+    ) -> dict:
         logger.info(
             "Refreshing access token",
         )
