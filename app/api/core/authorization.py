@@ -1,4 +1,5 @@
 from fastapi import HTTPException, status
+from uuid import UUID
 
 from app.api.enums.roles import RoleName
 from app.api.models.roles_model import Role
@@ -42,13 +43,13 @@ def can_access_role(
 
 def can_access_user(
     current_user: User,
-    user: User,
+    target_user_id: UUID,
 ) -> None:
 
     if is_admin(current_user):
         return
 
-    if current_user.user_id == user.user_id:
+    if current_user.user_id == target_user_id:
         return
 
     raise HTTPException(

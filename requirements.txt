@@ -9,3 +9,7 @@ python-dotenv
 ruff
 pwdlib
 pyjwt
+slowapi
+redis
+python-jose
+email-validator

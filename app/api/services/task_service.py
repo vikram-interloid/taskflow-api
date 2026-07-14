@@ -164,9 +164,9 @@ class TaskService:
     def get_all_tasks(
         self,
         query: TaskQueryParams,
-        current_user: User
-    ) -> list[dict]:
-        
+        current_user: User,
+    ) -> dict:
+
         if not is_admin(current_user):
             query.created_by = current_user.user_id
 
@@ -175,6 +175,7 @@ class TaskService:
             f"admin={is_admin(current_user)}:"
             f"manager={is_manager(current_user)}:"
             f"user={current_user.user_id}:"
+            f"created_by={query.created_by}:"
             f"page={query.page}:"
             f"limit={query.limit}:"
             f"search={query.search}:"
@@ -187,24 +188,26 @@ class TaskService:
             cache_key,
         )
 
-        cached_tasks = self.cache_repository.get(
+        cached_response = self.cache_repository.get(
             cache_key,
         )
 
-        if cached_tasks is not None:
+        if cached_response is not None:
             logger.info(
                 "Cache HIT '%s'",
                 cache_key,
             )
 
-            return cached_tasks
+            return cached_response
 
         logger.info(
             "Cache MISS '%s'",
             cache_key,
         )
 
-        tasks = self.task_repository.get_all_tasks(query)
+        tasks, total = self.task_repository.get_all_tasks(
+            query,
+        )
 
         logger.info(
             "Retrieved %d tasks from database",
@@ -223,18 +226,27 @@ class TaskService:
             for task in tasks
         ]
 
+        response = {
+            "page": query.page,
+            "limit": query.limit,
+            "total": total,
+            "data": task_list,
+        }
+
         self.cache_repository.set(
             key=cache_key,
-            value=task_list,
+            value=response,
             expire=300,
         )
 
         logger.info(
-            "Cached %d tasks for 300 seconds",
+            "Cached page %d containing %d tasks (total=%d)",
+            query.page,
             len(task_list),
+            total,
         )
 
-        return task_list
+        return response
     
     
     def update_task(

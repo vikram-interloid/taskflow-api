@@ -9,6 +9,7 @@ from app.api.core.rbac import require_roles
 from app.api.enums.roles import RoleName
 from app.api.models.users_model import User
 from app.api.schemas.query_schema import TaskQueryParams
+from app.api.schemas.pagination_schema import PaginatedResponse
 from app.api.schemas.task_schema import TaskCreate, TaskResponse, TaskUpdate
 from app.api.services.task_service import TaskService
 
@@ -44,7 +45,7 @@ def create_task(
 
 @router.get(
     "",
-    response_model=list[TaskResponse],
+    response_model= PaginatedResponse[TaskResponse],
     status_code=status.HTTP_200_OK,
 )
 def get_all_tasks(

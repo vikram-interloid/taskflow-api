@@ -37,51 +37,40 @@ class UserRepository(BaseRepository):
     def get_all_users(
         self,
         query: UserQueryParams,
-    ):
+    ) -> tuple[list[User], int]:
 
-        stmt = select(User)
+        db_query = self.db.query(User)
 
-        filters = {
-            "email": User.email,
-        }
+        if query.email:
+            db_query = db_query.filter(
+                User.email.ilike(f"%{query.email}%")
+            )
 
-        stmt = self.apply_filters(
-            stmt=stmt,
-            filters=filters,
-            query=query,
+        if query.search:
+            db_query = db_query.filter(
+                User.user_name.ilike(f"%{query.search}%")
+            )
+
+        total = db_query.count()
+
+        sort_column = getattr(
+            User,
+            query.sort_by,
+            User.created_at,
         )
 
-        stmt = self.apply_search(
-            stmt=stmt,
-            search=query.search,
-            columns=[
-                User.user_name,
-                User.email,
-            ],
+        if query.order.lower() == "desc":
+            db_query = db_query.order_by(sort_column.desc())
+        else:
+            db_query = db_query.order_by(sort_column.asc())
+
+        users = (
+            db_query.offset((query.page - 1) * query.limit)
+            .limit(query.limit)
+            .all()
         )
 
-        sortable_columns = {
-            "user_name": User.user_name,
-            "email": User.email,
-            "created_at": User.created_at,
-        }
-
-        stmt = self.apply_sort(
-            stmt=stmt,
-            sortable_columns=sortable_columns,
-            sort_by=query.sort_by,
-            order=query.order,
-        )
-
-        stmt = self.apply_pagination(
-            stmt=stmt,
-            page=query.page,
-            limit=query.limit,
-        )
-
-        result = self.db.execute(stmt)
-
-        return result.scalars().all()
+        return users, total
     
     
     def update_user(self, user: User) -> User:

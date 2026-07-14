@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.api.core.logging import get_logger
 
-from app.api.core.authorization import can_access_user_task
+from app.api.core.authorization import can_access_user_task, is_admin
 from app.api.models.user_task import UserTask
 from app.api.models.users_model import User
 from app.api.enums.roles import RoleName
@@ -68,6 +68,44 @@ class UserTaskService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Task not found",
             )
+
+        if not is_admin(current_user):
+            if task.created_by != current_user.user_id:
+                logger.warning(
+                    "Manager %s attempted to assign task %s created by %s",
+                    current_user.user_id,
+                    task.task_id,
+                    task.created_by,
+                )
+
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Managers can only assign tasks they created",
+                )
+                
+        if not is_admin(current_user):
+            target_user_roles = (
+                self.user_role_repository.get_roles_by_user_id(
+                    user.user_id,
+                )
+            )
+
+            target_is_admin = any(
+                role.role_name == RoleName.ADMIN
+                for role in target_user_roles
+            )
+
+            if target_is_admin:
+                logger.warning(
+                    "Manager %s attempted to assign a task to admin %s",
+                    current_user.user_id,
+                    user.user_id,
+                )
+
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Managers cannot assign tasks to admins",
+                )
 
         existing = self.user_task_repository.get_user_task(
             user_task_data.user_id,
@@ -214,24 +252,29 @@ class UserTaskService:
         self,
         query: UserTaskQueryParams,
         current_user: User,
-    ):
+    ) -> dict:
+
         roles = self.user_role_repository.get_roles_by_user_id(
-        current_user.user_id,
-    )
-        
+            current_user.user_id,
+        )
+
         is_admin = any(
             role.role_name == RoleName.ADMIN
             for role in roles
         )
+
         if not is_admin:
             query.user_id = current_user.user_id
 
         cache_key = (
             f"taskflow:cache:user_tasks:"
+            f"admin={is_admin}:"
+            f"user={current_user.user_id}:"
             f"page={query.page}:"
             f"limit={query.limit}:"
-            f"user={query.user_id}:"
+            f"user_filter={query.user_id}:"
             f"task={query.task_id}:"
+            f"created_by={query.created_by}:"
             f"status={query.status}:"
             f"sort={query.sort_by}:"
             f"order={query.order}:"
@@ -243,24 +286,24 @@ class UserTaskService:
             cache_key,
         )
 
-        cached_user_tasks = self.cache_repository.get(
+        cached_response = self.cache_repository.get(
             cache_key,
         )
 
-        if cached_user_tasks is not None:
+        if cached_response is not None:
             logger.info(
                 "Cache HIT '%s'",
                 cache_key,
             )
 
-            return cached_user_tasks
+            return cached_response
 
         logger.info(
             "Cache MISS '%s'",
             cache_key,
         )
 
-        user_tasks = self.user_task_repository.get_all_user_tasks(
+        user_tasks, total = self.user_task_repository.get_all_user_tasks(
             query,
         )
 
@@ -291,18 +334,27 @@ class UserTaskService:
             for item in user_tasks
         ]
 
+        response = {
+            "page": query.page,
+            "limit": query.limit,
+            "total": total,
+            "data": user_task_list,
+        }
+
         self.cache_repository.set(
             key=cache_key,
-            value=user_task_list,
+            value=response,
             expire=300,
         )
 
         logger.info(
-            "Cached %d user-task records for 300 seconds",
+            "Cached page %d containing %d user-task records (total=%d)",
+            query.page,
             len(user_task_list),
+            total,
         )
 
-        return user_task_list
+        return response
             
     
 

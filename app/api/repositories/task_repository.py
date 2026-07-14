@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
 from app.api.models.task_model import Task
@@ -49,6 +49,12 @@ class TaskRepository(BaseRepository):
             ],
         )
 
+        count_stmt = stmt.with_only_columns(
+            func.count(Task.task_id)
+        ).order_by(None)
+
+        total = self.db.scalar(count_stmt)
+
         sortable_columns = {
             "task_name": Task.task_name,
             "created_at": Task.created_at,
@@ -69,7 +75,7 @@ class TaskRepository(BaseRepository):
 
         result = self.db.execute(stmt)
 
-        return result.scalars().all()
+        return result.scalars().all(), total
 
     
     def update_task(self, task: Task) -> Task:

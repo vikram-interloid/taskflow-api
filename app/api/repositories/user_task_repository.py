@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
 from app.api.models.user_task import UserTask
@@ -44,7 +44,7 @@ class UserTaskRepository(BaseRepository):
     def get_all_user_tasks(
         self,
         query: UserTaskQueryParams,
-    ):
+    ) -> tuple[list[UserTask], int]:
 
         stmt = select(UserTask)
 
@@ -61,6 +61,12 @@ class UserTaskRepository(BaseRepository):
             query=query,
         )
 
+        # Count BEFORE pagination
+        count_stmt = stmt.with_only_columns(
+            func.count(UserTask.id)
+        ).order_by(None)
+
+        total = self.db.scalar(count_stmt)
 
         stmt = self.apply_sort(
             stmt=stmt,
@@ -81,7 +87,7 @@ class UserTaskRepository(BaseRepository):
 
         result = self.db.execute(stmt)
 
-        return result.scalars().all()
+        return result.scalars().all(), total
 
     def update_user_task(
         self,

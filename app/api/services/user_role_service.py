@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.api.core.logging import get_logger
 from app.api.models.user_role import UserRole
+from app.api.models.users_model import User
 from app.api.repositories.role_repository import RoleRepository
 from app.api.repositories.user_repository import UserRepository
 from app.api.repositories.user_role_repository import UserRoleRepository
@@ -26,6 +27,7 @@ class UserRoleService:
     def create_user_role(
         self,
         user_role_data: UserRoleCreate,
+        current_user: User,
     ) -> UserRole:
 
         logger.info(
@@ -64,21 +66,6 @@ class UserRoleService:
                 detail="Role not found",
             )
 
-        assigned_by = self.user_repository.get_user_by_id(
-            user_role_data.assigned_by,
-        )
-
-        if assigned_by is None:
-            logger.warning(
-                "Assigned-by user %s not found",
-                user_role_data.assigned_by,
-            )
-
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Assigned by user not found",
-            )
-
         existing = self.user_role_repository.get_user_role(
             user_role_data.user_id,
             user_role_data.role_id,
@@ -97,9 +84,9 @@ class UserRoleService:
             )
 
         user_role = UserRole(
-            user_id=user_role_data.user_id,
-            role_id=user_role_data.role_id,
-            assigned_by=user_role_data.assigned_by,
+            user_id = user_role_data.user_id,
+            role_id = user_role_data.role_id,
+            assigned_by = current_user.user_id,
         )
 
         user_role = self.user_role_repository.create_user_role(

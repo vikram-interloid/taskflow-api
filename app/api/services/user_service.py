@@ -95,13 +95,17 @@ class UserService:
         self,
         user_id: UUID,
         current_user: User
-    ) -> User | dict:
+    ) -> User:
 
         cache_key = f"taskflow:cache:user:{user_id}"
 
         logger.info(
             "Checking cache '%s'",
             cache_key,
+        )
+        can_access_user(
+            current_user=current_user,
+            target_user_id=user_id,
         )
 
         cached_user = self.cache_repository.get(
@@ -135,8 +139,6 @@ class UserService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found",
             )
-        
-        can_access_user(current_user, user)
 
         logger.info(
             "Retrieved user '%s' (%s) from database",
@@ -169,8 +171,8 @@ class UserService:
     def get_all_users(
         self,
         query: UserQueryParams,
-        current_user: User
-    ) -> list[dict]:
+        current_user: User,
+    ) -> dict:
 
         cache_key = (
             f"taskflow:cache:users:"
@@ -178,8 +180,9 @@ class UserService:
             f"user={current_user.user_id}:"
             f"page={query.page}:"
             f"limit={query.limit}:"
+            f"email={query.email}:"
             f"search={query.search}:"
-            f"sort={query.sort_by}:"
+            f"sort_by={query.sort_by}:"
             f"order={query.order}"
         )
 
@@ -188,17 +191,17 @@ class UserService:
             cache_key,
         )
 
-        cached_users = self.cache_repository.get(
+        cached_response = self.cache_repository.get(
             cache_key,
         )
 
-        if cached_users is not None:
+        if cached_response is not None:
             logger.info(
                 "Cache HIT '%s'",
                 cache_key,
             )
 
-            return cached_users
+            return cached_response
 
         logger.info(
             "Cache MISS '%s'",
@@ -206,13 +209,14 @@ class UserService:
         )
 
         if is_admin(current_user):
-            users = self.user_repository.get_all_users(query)
+            users, total = self.user_repository.get_all_users(query)
         else:
             users = [
                 self.user_repository.get_user_by_id(
-                    current_user.user_id
+                    current_user.user_id,
                 )
             ]
+            total = len(users)
 
         logger.info(
             "Retrieved %d users from database",
@@ -230,9 +234,16 @@ class UserService:
             for user in users
         ]
 
+        response = {
+            "page": query.page,
+            "limit": query.limit,
+            "total": total,
+            "data": user_list,
+        }
+
         self.cache_repository.set(
             key=cache_key,
-            value=user_list,
+            value=response,
             expire=300,
         )
 
@@ -241,7 +252,7 @@ class UserService:
             len(user_list),
         )
 
-        return user_list
+        return response
         
     
     def update_user(

@@ -15,6 +15,7 @@ from app.api.schemas.user_task_schema import (
     UserTaskResponse,
     UserTaskUpdate,
 )
+from app.api.schemas.pagination_schema import PaginatedResponse
 from app.api.services.user_task_service import UserTaskService
 
 router = APIRouter(
@@ -50,7 +51,7 @@ def create_user_task(
 
 @router.get(
     "",
-    response_model=list[UserTaskResponse],
+    response_model=PaginatedResponse[UserTaskResponse],
     status_code=status.HTTP_200_OK,
 )
 def get_all_user_tasks(

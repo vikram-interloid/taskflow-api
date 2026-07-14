@@ -40,7 +40,7 @@ def create_user_role(
         require_roles([RoleName.ADMIN])
     )
 ):
-    return service.create_user_role(user_role_data)
+    return service.create_user_role(user_role_data,current_user)
 
 
 @router.get(

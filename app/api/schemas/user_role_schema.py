@@ -11,7 +11,7 @@ class UserRoleBase(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 class UserRoleCreate(UserRoleBase):
-    assigned_by: UUID
+    pass
 
 class UserRoleResponse(UserRoleBase):
     id: UUID
