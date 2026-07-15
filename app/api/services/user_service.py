@@ -3,12 +3,11 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.core.logging import get_logger
-
-from app.api.core.security import hash_password
 from app.api.core.authorization import can_access_user, is_admin
-from app.api.models.users_model import User
+from app.api.core.logging import get_logger
+from app.api.core.security import hash_password
 from app.api.enums.roles import RoleName
+from app.api.models.users_model import User
 from app.api.repositories.cache_repository import CacheRepository
 from app.api.repositories.user_repository import UserRepository
 from app.api.repositories.user_role_repository import UserRoleRepository

@@ -1,16 +1,15 @@
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
+from app.api.core.config import settings
 from fastapi.security import OAuth2PasswordBearer
 from jose import ExpiredSignatureError, JWTError, jwt
 from pwdlib import PasswordHash
 
-from app.api.core.config import settings
-
 password_hash = PasswordHash.recommended()
 
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/auth/login",
+    tokenUrl="/oauth/login",
 )
 
 def hash_password(password:str) -> str:

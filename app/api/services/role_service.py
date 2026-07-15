@@ -4,8 +4,8 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.api.core.authorization import can_access_role, is_admin
 from app.api.core.logging import get_logger
-from app.api.core.authorization import can_access_role,is_admin
 from app.api.models.roles_model import Role
 from app.api.models.users_model import User
 from app.api.repositories.cache_repository import CacheRepository

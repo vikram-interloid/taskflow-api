@@ -1,5 +1,6 @@
-from fastapi import HTTPException, status
 from uuid import UUID
+
+from fastapi import HTTPException, status
 
 from app.api.enums.roles import RoleName
 from app.api.models.roles_model import Role

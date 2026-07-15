@@ -3,11 +3,11 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from app.api.models.users_model import User
 from app.api.core.dependencies import get_current_user
 from app.api.core.rbac import require_roles
 from app.api.database.db_config import get_db
 from app.api.enums.roles import RoleName
+from app.api.models.users_model import User
 from app.api.schemas.query_schema import RoleQueryParams
 from app.api.schemas.role_schema import RoleCreate, RoleResponse, RoleUpdate
 from app.api.services.role_service import RoleService

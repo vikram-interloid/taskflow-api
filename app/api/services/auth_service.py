@@ -1,12 +1,11 @@
 from uuid import UUID
 
 from fastapi import HTTPException, status
-# from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from app.api.core.logging import get_logger
-
 from app.api.core.config import settings
+from app.api.core.logging import get_logger
 from app.api.core.security import (
     create_access_token,
     create_refresh_token,
@@ -23,6 +22,80 @@ class AuthService:
     def __init__(self,db : Session):
         self.user_repository = UserRepository(db)
         self.refresh_token_repository = RefreshRepository()
+        
+    def auth_login(
+        self,
+        form_data: OAuth2PasswordRequestForm
+    ) -> dict:
+
+        logger.info(
+            "Login attempt for '%s'",
+            form_data.username,
+        )
+
+        user = self.user_repository.get_user_by_email(
+            form_data.username,
+        )
+
+        if user is None:
+            logger.warning(
+                "Login failed for '%s': user not found",
+                form_data.username,
+            )
+
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
+            )
+
+        if not verify_password(
+            form_data.password,
+            user.password_hash,
+        ):
+            logger.warning(
+                "Login failed for '%s': invalid password",
+                form_data.username,
+            )
+
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
+            )
+
+        payload = {
+            "sub": str(user.user_id),
+            "email": user.email,
+            "username": user.user_name,
+        }
+
+        access_token = create_access_token(
+            payload,
+        )
+
+        refresh_token = create_refresh_token(
+            payload,
+        )
+
+        self.refresh_token_repository.save_refresh_token(
+            user_id=user.user_id,
+            refresh_token=refresh_token,
+            expire_seconds=settings.REFRESH_TOKEN_EXPIRE_DAYS
+            * 24
+            * 60
+            * 60,
+        )
+
+        logger.info(
+            "User '%s' logged in successfully",
+            user.email,
+        )
+
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+        }   
+    
         
         
     def login(

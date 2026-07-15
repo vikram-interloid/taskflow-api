@@ -8,16 +8,14 @@ from sqlalchemy.orm import Session
 from app.api.core.auth_middleware import AuthMiddleware
 from app.api.core.limiter import limiter
 from app.api.core.logging import setup_logging
-
 from app.api.database.db_config import get_db
+from app.api.routers.auth_router import oauthrouter as oauthrouter
 from app.api.routers.auth_router import router as auth_router
 from app.api.routers.role_router import router as role_router
 from app.api.routers.task_router import router as task_router
 from app.api.routers.user_role_router import router as user_role_router
 from app.api.routers.user_router import router as user_router
 from app.api.routers.user_task_router import router as user_task_router
-
-
 
 setup_logging()
 
@@ -35,6 +33,7 @@ app.add_middleware(AuthMiddleware)
 
 API_PREFIX = '/api/v1'
 
+app.include_router(oauthrouter)
 app.include_router(auth_router, prefix = API_PREFIX)
 app.include_router(user_router, prefix = API_PREFIX)
 app.include_router(role_router, prefix = API_PREFIX)

@@ -11,7 +11,6 @@ class BaseRepository:
     ) -> Select:
         
         """
-        filters example:
         {
             "status": Task.status,
             "created_by": Task.created_by,

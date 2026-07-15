@@ -1,22 +1,8 @@
-import os
-
-from dotenv import load_dotenv
+from app.api.core.config import settings
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-load_dotenv()
-
-DATABASE_HOST = os.getenv("DATABASE_HOST")
-DATABASE_USER = os.getenv("DATABASE_USER")
-DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD")
-DATABASE_NAME = os.getenv("DATABASE_NAME")
-DATABASE_PORT = os.getenv("DATABASE_PORT")
-
-
-# DATABASE_URL = ("postgresql+psycopg://postgres:postgres@localhost:5432/task_management_db")
-
-DATABASE_URL = (f"postgresql+psycopg://"f"{DATABASE_USER}:{DATABASE_PASSWORD}"f"@{DATABASE_HOST}:{DATABASE_PORT}"f"/{DATABASE_NAME}")
-
+DATABASE_URL = settings.DATABASE_URL
 
 engine = create_engine(DATABASE_URL)
 

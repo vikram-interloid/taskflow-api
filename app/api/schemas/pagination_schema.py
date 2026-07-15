@@ -1,6 +1,6 @@
+from typing import TypeVar,Generic
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.generics import GenericModel
-from typing import Generic, TypeVar
 
 T = TypeVar("T")
 class PaginationParams(BaseModel):
