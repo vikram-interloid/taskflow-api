@@ -46,6 +46,13 @@ class UserRole(Base):
         nullable=False,
     )
     
+    updated_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+    
     assigned_by: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid = True),
         ForeignKey("users.user_id"),

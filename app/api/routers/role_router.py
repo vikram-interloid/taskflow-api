@@ -11,6 +11,7 @@ from app.api.models.users_model import User
 from app.api.schemas.query_schema import RoleQueryParams
 from app.api.schemas.role_schema import RoleCreate, RoleResponse, RoleUpdate
 from app.api.services.role_service import RoleService
+from app.api.services.error_service import CREATE_RESPONSES, PROTECTED_RESPONSES, RESOURCE_RESPONSES
 
 router = APIRouter(
     prefix="/roles",
@@ -26,26 +27,28 @@ def get_role_service(
 
 
 
-@router.post(
-    "",
-    response_model=RoleResponse,
-    status_code=status.HTTP_201_CREATED
-)
-def create_role(
-    roledata: RoleCreate,
-    service: RoleService = Depends(get_role_service),
-    current_user: User = Depends(
-        require_roles([RoleName.ADMIN])
-    )
-):
+# @router.post(
+#     "",
+#     response_model=RoleResponse,
+#     status_code=status.HTTP_201_CREATED,
+#     responses=CREATE_RESPONSES
+# )
+# def create_role(
+#     roledata: RoleCreate,
+#     service: RoleService = Depends(get_role_service),
+#     current_user: User = Depends(
+#         require_roles([RoleName.ADMIN])
+#     )
+# ):
 
-    return service.create_role(roledata)
+#     return service.create_role(roledata)
 
 
 
 @router.get(
     "",
-    response_model=list[RoleResponse]
+    response_model=list[RoleResponse],
+    responses=PROTECTED_RESPONSES
 )
 def get_roles(
     query: RoleQueryParams = Depends(),
@@ -58,48 +61,51 @@ def get_roles(
 
 
 @router.get(
-    "/{role_id}",
-    response_model=RoleResponse
+    "/{id}",
+    response_model=RoleResponse,
+    responses=RESOURCE_RESPONSES
 )
 def get_role(
-    role_id: UUID,
+    id: UUID,
     service: RoleService = Depends(get_role_service),
     current_user: User = Depends(get_current_user)   
 ):
 
     return service.get_role_by_id(
-        role_id,
-        current_user,
+        role_id = id,
+        current_user = current_user ,
     )
 
 
 
-@router.patch(
-    "/{role_id}",
-    response_model=RoleResponse
-)
-def update_role(
-    role_id: UUID,
-    roledata: RoleUpdate,
-    service: RoleService = Depends(get_role_service),
-    current_user: User = Depends(
-        require_roles([RoleName.ADMIN])
-    )    
-):
+# @router.patch(
+#     "/{id}",
+#     response_model=RoleResponse,
+#     responses=RESOURCE_RESPONSES
+# )
+# def update_role(
+#     id: UUID,
+#     roledata: RoleUpdate,
+#     service: RoleService = Depends(get_role_service),
+#     current_user: User = Depends(
+#         require_roles([RoleName.ADMIN])
+#     )    
+# ):
 
-    return service.update_role(
-        role_id,
-        roledata
-    )
+#     return service.update_role(
+#         role_id = id,
+#         roledata = roledata
+#     )
 
 
 
 @router.delete(
-    "/{role_id}",
-    status_code=status.HTTP_204_NO_CONTENT
+    "/{id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses=RESOURCE_RESPONSES
 )
 def delete_role(
-    role_id: UUID,
+    id: UUID,
     service: RoleService = Depends(get_role_service),
     current_user: User = Depends(
         require_roles([RoleName.ADMIN])
@@ -107,7 +113,7 @@ def delete_role(
 ):
 
     service.delete_role(
-        role_id
+        role_id = id
     )
 
     return None

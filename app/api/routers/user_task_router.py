@@ -15,15 +15,22 @@ from app.api.schemas.user_task_schema import (
     UserTaskResponse,
     UserTaskUpdate,
 )
+from app.api.services.error_service import (
+    CREATE_RESOURCE_RESPONSES,
+    RESOURCE_RESPONSES,
+)
 from app.api.services.user_task_service import UserTaskService
 
+
 router = APIRouter(
-    prefix="/user-tasks",
-    tags=["User Tasks"],
+    prefix="/tasks/{id}/assignees",
+    tags=["Task Assignments"],
 )
 
 
-def get_user_task_service(db: Session = Depends(get_db)) -> UserTaskService:
+def get_user_task_service(
+    db: Session = Depends(get_db),
+) -> UserTaskService:
     return UserTaskService(db)
 
 
@@ -31,20 +38,27 @@ def get_user_task_service(db: Session = Depends(get_db)) -> UserTaskService:
     "",
     response_model=UserTaskResponse,
     status_code=status.HTTP_201_CREATED,
+    responses=CREATE_RESOURCE_RESPONSES,
 )
-def create_user_task(
-    user_task_data: UserTaskCreate,
+def assign_task(
+    task_id: UUID,
+    request: UserTaskCreate,
     current_user: User = Depends(
-            require_roles([
-                RoleName.ADMIN, 
-                RoleName.MANAGER
-            ])
-    ),    
-    service: UserTaskService = Depends(get_user_task_service),
+        require_roles(
+            [
+                RoleName.ADMIN,
+                RoleName.MANAGER,
+            ]
+        )
+    ),
+    service: UserTaskService = Depends(
+        get_user_task_service,
+    ),
 ):
     return service.create_user_task(
-        user_task_data,
-        current_user,
+        task_id=task_id,
+        user_task_data=request,
+        current_user=current_user,
     )
 
 
@@ -52,66 +66,98 @@ def create_user_task(
     "",
     response_model=PaginatedResponse[UserTaskResponse],
     status_code=status.HTTP_200_OK,
+    responses=RESOURCE_RESPONSES,
 )
-def get_all_user_tasks(
+def get_task_assignees(
+    task_id: UUID,
     query: UserTaskQueryParams = Depends(),
     current_user: User = Depends(
-            get_current_user
+        get_current_user,
     ),
-    service: UserTaskService = Depends(get_user_task_service),
+    service: UserTaskService = Depends(
+        get_user_task_service,
+    ),
 ):
-    return service.get_all_user_tasks(query,current_user)
+    return service.get_task_assignees(
+        task_id=task_id,
+        query=query,
+        current_user=current_user,
+    )
 
 
 @router.get(
-    "/{user_task_id}",
+    "/{assignee_id}",
     response_model=UserTaskResponse,
     status_code=status.HTTP_200_OK,
+    responses=RESOURCE_RESPONSES,
 )
-def get_user_task_by_id(
-    user_task_id: UUID,
+def get_task_assignee(
+    id: UUID,
+    assignee_id: UUID,
     current_user: User = Depends(
-        get_current_user
+        get_current_user,
     ),
-    service: UserTaskService = Depends(get_user_task_service),
+    service: UserTaskService = Depends(
+        get_user_task_service,
+    ),
 ):
-    return service.get_user_task_by_id(user_task_id,current_user)
+    return service.get_task_assignee(
+        task_id = id,
+        user_id = assignee_id,
+        current_user = current_user,
+    )
 
 
 @router.patch(
-    "/{user_task_id}",
+    "/{assignee_id}",
     response_model=UserTaskResponse,
     status_code=status.HTTP_200_OK,
+    responses=RESOURCE_RESPONSES,
 )
-def update_user_task(
-    user_task_id: UUID,
+def update_task_assignment(
+    id: UUID,
+    assignee_id: UUID,
     user_task_data: UserTaskUpdate,
     current_user: User = Depends(
-        get_current_user
+        get_current_user,
     ),
-    service: UserTaskService = Depends(get_user_task_service),
+    service: UserTaskService = Depends(
+        get_user_task_service,
+    ),
 ):
     return service.update_user_task(
-        user_task_id,
-        user_task_data,
-        current_user
+        task_id = id,
+        user_id = assignee_id,
+        user_task_data = user_task_data,
+        current_user = current_user,
     )
 
 
 @router.delete(
-    "/{user_task_id}",
+    "/{assignee_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    responses=RESOURCE_RESPONSES,
 )
-def delete_user_task(
-    user_task_id: UUID,
+def remove_task_assignment(
+    id: UUID,
+    assignee_id: UUID,
     current_user: User = Depends(
-        require_roles([
-            RoleName.ADMIN, 
-            RoleName.MANAGER
-        ])
+        require_roles(
+            [
+                RoleName.ADMIN,
+                RoleName.MANAGER,
+            ]
+        )
     ),
-    service: UserTaskService = Depends(get_user_task_service),
+    service: UserTaskService = Depends(
+        get_user_task_service,
+    ),
 ):
-    service.delete_user_task(user_task_id,current_user)
-    
-    
+    service.delete_user_task(
+        task_id = id,
+        user_id = assignee_id,
+        current_user=current_user,
+    )
+
+    return None
+

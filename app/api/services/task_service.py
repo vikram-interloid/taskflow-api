@@ -33,7 +33,7 @@ class TaskService:
 
         logger.info(
             "Creating task '%s'",
-            taskdata.task_name,
+            taskdata.name,
         )
 
         user = self.user_repository.get_user_by_id(
@@ -52,8 +52,8 @@ class TaskService:
             )
 
         task = Task(
-            task_name=taskdata.task_name,
-            task_desc=taskdata.task_desc,
+            name=taskdata.name,
+            desc=taskdata.desc,
             created_by=current_user.user_id,
         )
 
@@ -135,14 +135,14 @@ class TaskService:
 
         logger.info(
             "Retrieved task '%s' (%s) from database",
-            task.task_name,
+            task.name,
             task.task_id,
         )
 
         task_data = {
             "task_id": str(task.task_id),
-            "task_name": task.task_name,
-            "task_desc": task.task_desc,
+            "name": task.name,
+            "desc": task.desc,
             "created_by": str(task.created_by),
             "created_at": task.created_at.isoformat(),
             "updated_at": task.updated_at.isoformat(),
@@ -217,8 +217,8 @@ class TaskService:
         task_list = [
             {
                 "task_id": str(task.task_id),
-                "task_name": task.task_name,
-                "task_desc": task.task_desc,
+                "name": task.name,
+                "desc": task.desc,
                 "created_by": str(task.created_by),
                 "created_at": task.created_at.isoformat(),
                 "updated_at": task.updated_at.isoformat(),
@@ -302,21 +302,7 @@ class TaskService:
             exclude_unset=True,
         )
 
-        if "created_by" in update_data:
-            user = self.user_repository.get_user_by_id(
-                update_data["created_by"],
-            )
-
-            if user is None:
-                logger.warning(
-                    "Assigned user %s not found",
-                    update_data["created_by"],
-                )
-
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="User not found",
-                )
+        
 
         for key, value in update_data.items():
             setattr(
@@ -331,7 +317,7 @@ class TaskService:
 
         logger.info(
             "Updated task '%s' (%s)",
-            task.task_name,
+            task.name,
             task.task_id,
         )
 
@@ -414,7 +400,7 @@ class TaskService:
 
         logger.info(
             "Deleted task '%s' (%s)",
-            task.task_name,
+            task.name,
             task.task_id,
         )
 

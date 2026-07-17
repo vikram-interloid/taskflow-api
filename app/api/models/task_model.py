@@ -18,14 +18,16 @@ class Task(Base):
         default=uuid.uuid4
     )
     
-    task_name: Mapped[str] = mapped_column(
+    name: Mapped[str] = mapped_column(
+        "task_name",
         String(50),
-        nullable = False
+        nullable=False,
     )
-    
-    task_desc: Mapped[str] = mapped_column(
+
+    desc: Mapped[str] = mapped_column(
+        "task_desc",
         String(255),
-        nullable = False
+        nullable=False,
     )
     
     created_at: Mapped[datetime] = mapped_column (

@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -6,35 +7,46 @@ from sqlalchemy.orm import Session
 from app.api.core.authorization import can_access_user_task, is_admin
 from app.api.core.logging import get_logger
 from app.api.enums.roles import RoleName
+from app.api.enums.task_status import TaskStatus
 from app.api.models.user_task import UserTask
 from app.api.models.users_model import User
 from app.api.repositories.cache_repository import CacheRepository
+from app.api.repositories.role_repository import RoleRepository
 from app.api.repositories.task_repository import TaskRepository
 from app.api.repositories.user_repository import UserRepository
 from app.api.repositories.user_role_repository import UserRoleRepository
 from app.api.repositories.user_task_repository import UserTaskRepository
 from app.api.schemas.query_schema import UserTaskQueryParams
-from app.api.schemas.user_task_schema import UserTaskCreate, UserTaskUpdate
+from app.api.schemas.user_task_schema import (
+    UserTaskCreate,
+    UserTaskUpdate,
+)
 
 logger = get_logger(__name__)
 
 class UserTaskService:
-    def __init__(self, db: Session):
+
+    def __init__(
+        self,
+        db: Session,
+    ):
         self.user_task_repository = UserTaskRepository(db)
         self.user_repository = UserRepository(db)
         self.task_repository = TaskRepository(db)
         self.user_role_repository = UserRoleRepository(db)
+        self.role_repository = RoleRepository(db)
         self.cache_repository = CacheRepository()
-
+        
     def create_user_task(
         self,
+        task_id: UUID,
         user_task_data: UserTaskCreate,
         current_user: User,
     ) -> UserTask:
 
         logger.info(
             "Assigning task %s to user %s",
-            user_task_data.task_id,
+            task_id,
             user_task_data.user_id,
         )
 
@@ -54,13 +66,13 @@ class UserTaskService:
             )
 
         task = self.task_repository.get_task_by_id(
-            user_task_data.task_id,
+            task_id,
         )
 
         if task is None:
             logger.warning(
                 "Task %s not found",
-                user_task_data.task_id,
+                task_id,
             )
 
             raise HTTPException(
@@ -81,7 +93,7 @@ class UserTaskService:
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Managers can only assign tasks they created",
                 )
-                
+
         if not is_admin(current_user):
             target_user_roles = (
                 self.user_role_repository.get_roles_by_user_id(
@@ -106,16 +118,14 @@ class UserTaskService:
                     detail="Managers cannot assign tasks to admins",
                 )
 
-        existing = self.user_task_repository.get_user_task(
-            user_task_data.user_id,
-            user_task_data.task_id,
-        )
-
-        if existing:
+        if self.user_task_repository.user_task_exists(
+            user_id=user.user_id,
+            task_id=task_id,
+        ):
             logger.warning(
                 "Task %s is already assigned to user %s",
-                user_task_data.task_id,
-                user_task_data.user_id,
+                task_id,
+                user.user_id,
             )
 
             raise HTTPException(
@@ -124,21 +134,15 @@ class UserTaskService:
             )
 
         user_task = UserTask(
-            task_id=user_task_data.task_id,
-            user_id=user_task_data.user_id,
+            task_id=task_id,
+            user_id=user.user_id,
             due_at=user_task_data.due_at,
             created_by=current_user.user_id,
-            status="pending",
+            status=TaskStatus.PENDING,
         )
 
         user_task = self.user_task_repository.create_user_task(
             user_task,
-        )
-
-        logger.info(
-            "Assigned task %s to user %s",
-            user_task.task_id,
-            user_task.user_id,
         )
 
         self.cache_repository.delete_pattern(
@@ -146,138 +150,58 @@ class UserTaskService:
         )
 
         logger.info(
-            "Invalidated cache pattern 'taskflow:cache:user_tasks*'",
+            "Assigned task %s to user %s",
+            task_id,
+            user.user_id,
         )
 
         return user_task
-        
-        
-
-    def get_user_task_by_id(
-        self,
-        user_task_id: UUID,
-        current_user: User,
-    ):
-
-        logger.info(
-            "Fetching user-task %s",
-            user_task_id,
-        )
-
-        user_task = self.user_task_repository.get_user_task_by_id(
-            user_task_id,
-        )
-
-        if user_task is None:
-            logger.warning(
-                "User-task %s not found",
-                user_task_id,
-            )
-
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User task not found",
-            )
-
-        can_access_user_task(
-            current_user,
-            user_task,
-        )
-
-        cache_key = f"taskflow:cache:user_task:{user_task_id}"
-
-        logger.info(
-            "Checking cache '%s'",
-            cache_key,
-        )
-
-        cached_user_task = self.cache_repository.get(
-            cache_key,
-        )
-
-        if cached_user_task is not None:
-            logger.info(
-                "Cache HIT '%s'",
-                cache_key,
-            )
-
-            return cached_user_task
-
-        logger.info(
-            "Cache MISS '%s'",
-            cache_key,
-        )
-
-        logger.info(
-            "Retrieved user-task %s from database",
-            user_task.id,
-        )
-
-        user_task_data = {
-            "id": str(user_task.id),
-            "task_id": str(user_task.task_id),
-            "user_id": str(user_task.user_id),
-            "created_by": str(user_task.created_by),
-            "status": user_task.status.value,
-            "due_at": (
-                user_task.due_at.isoformat()
-                if user_task.due_at
-                else None
-            ),
-            "completed_at": (
-                user_task.completed_at.isoformat()
-                if user_task.completed_at
-                else None
-            ),
-            "created_at": user_task.created_at.isoformat(),
-        }
-
-        self.cache_repository.set(
-            key=cache_key,
-            value=user_task_data,
-            expire=300,
-        )
-
-        logger.info(
-            "Cached user-task %s for 300 seconds",
-            user_task.id,
-        )
-
-        return user_task_data
-        
     
-
-    def get_all_user_tasks(
+    def get_task_assignees(
         self,
+        task_id: UUID,
         query: UserTaskQueryParams,
         current_user: User,
     ) -> dict:
 
-        roles = self.user_role_repository.get_roles_by_user_id(
-            current_user.user_id,
+        logger.info(
+            "Fetching assignees for task %s",
+            task_id,
         )
 
-        is_admin = any(
-            role.role_name == RoleName.ADMIN
-            for role in roles
+        task = self.task_repository.get_task_by_id(
+            task_id,
         )
 
-        if not is_admin:
-            query.user_id = current_user.user_id
+        if task is None:
+            logger.warning(
+                "Task %s not found",
+                task_id,
+            )
+
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Task not found",
+            )
+
+        if (
+            not is_admin(current_user)
+            and task.created_by != current_user.user_id
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Permission denied",
+            )
 
         cache_key = (
-            f"taskflow:cache:user_tasks:"
-            f"admin={is_admin}:"
-            f"user={current_user.user_id}:"
+            f"taskflow:cache:task_assignees:"
+            f"{task_id}:"
             f"page={query.page}:"
             f"limit={query.limit}:"
-            f"user_filter={query.user_id}:"
-            f"task={query.task_id}:"
-            f"created_by={query.created_by}:"
+            f"user={query.user_id}:"
             f"status={query.status}:"
             f"sort={query.sort_by}:"
-            f"order={query.order}:"
-            f"search={query.search}"
+            f"order={query.order}"
         )
 
         logger.info(
@@ -302,16 +226,13 @@ class UserTaskService:
             cache_key,
         )
 
-        user_tasks, total = self.user_task_repository.get_all_user_tasks(
-            query,
+        assignments, total = (
+            self.user_task_repository.get_task_assignees(
+                task_id=task_id,
+                query=query,
+            )
         )
-
-        logger.info(
-            "Retrieved %d user-task records from database",
-            len(user_tasks),
-        )
-
-        user_task_list = [
+        assignment_list = [
             {
                 "id": str(item.id),
                 "task_id": str(item.task_id),
@@ -329,15 +250,16 @@ class UserTaskService:
                     else None
                 ),
                 "created_at": item.created_at.isoformat(),
+                "updated_at": item.updated_at.isoformat(),
             }
-            for item in user_tasks
+            for item in assignments
         ]
 
         response = {
             "page": query.page,
             "limit": query.limit,
             "total": total,
-            "data": user_task_list,
+            "data": assignment_list,
         }
 
         self.cache_repository.set(
@@ -347,41 +269,134 @@ class UserTaskService:
         )
 
         logger.info(
-            "Cached page %d containing %d user-task records (total=%d)",
-            query.page,
-            len(user_task_list),
-            total,
+            "Cached assignees for task %s",
+            task_id,
         )
 
         return response
-            
     
+    
+    def get_task_assignee(
+        self,
+        task_id: UUID,
+        user_id: UUID,
+        current_user: User,
+    ) -> UserTask:
 
+        logger.info(
+            "Fetching assignment of user %s for task %s",
+            user_id,
+            task_id,
+        )
+
+        assignment = self.user_task_repository.get_user_task(
+            user_id=user_id,
+            task_id=task_id,
+        )
+
+        if assignment is None:
+            logger.warning(
+                "Assignment not found",
+            )
+
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Task assignment not found",
+            )
+
+        can_access_user_task(
+            current_user,
+            assignment,
+        )
+
+        cache_key = (
+            f"taskflow:cache:task_assignment:"
+            f"{task_id}:{user_id}"
+        )
+
+        logger.info(
+            "Checking cache '%s'",
+            cache_key,
+        )
+
+        cached_assignment = self.cache_repository.get(
+            cache_key,
+        )
+
+        if cached_assignment is not None:
+            logger.info(
+                "Cache HIT '%s'",
+                cache_key,
+            )
+
+            return cached_assignment
+
+        logger.info(
+            "Cache MISS '%s'",
+            cache_key,
+        )
+
+        assignment_data = {
+            "id": str(assignment.id),
+            "task_id": str(assignment.task_id),
+            "user_id": str(assignment.user_id),
+            "created_by": str(assignment.created_by),
+            "status": assignment.status.value,
+            "due_at": (
+                assignment.due_at.isoformat()
+                if assignment.due_at
+                else None
+            ),
+            "completed_at": (
+                assignment.completed_at.isoformat()
+                if assignment.completed_at
+                else None
+            ),
+            "created_at": assignment.created_at.isoformat(),
+            "updated_at": assignment.updated_at.isoformat(),
+        }
+
+        self.cache_repository.set(
+            key=cache_key,
+            value=assignment_data,
+            expire=300,
+        )
+
+        logger.info(
+            "Cached assignment for task %s and user %s",
+            task_id,
+            user_id,
+        )
+
+        return assignment_data
+    
     def update_user_task(
         self,
-        user_task_id: UUID,
+        task_id: UUID,
+        user_id: UUID,
         user_task_data: UserTaskUpdate,
         current_user: User,
     ) -> UserTask:
 
         logger.info(
-            "Updating user-task %s",
-            user_task_id,
+            "Updating assignment of task %s for user %s",
+            task_id,
+            user_id,
         )
 
-        user_task = self.user_task_repository.get_user_task_by_id(
-            user_task_id,
+        user_task = self.user_task_repository.get_user_task(
+            user_id=user_id,
+            task_id=task_id,
         )
 
         if user_task is None:
             logger.warning(
-                "User-task %s not found",
-                user_task_id,
+                "Task assignment not found",
             )
 
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="User task not found",
+                detail="Task assignment not found",
             )
 
         can_access_user_task(
@@ -392,6 +407,48 @@ class UserTaskService:
         update_data = user_task_data.model_dump(
             exclude_unset=True,
         )
+
+        if "status" in update_data:
+
+            new_status = update_data.pop("status")
+
+            current_status = user_task.status
+
+            allowed_transitions = {
+                TaskStatus.PENDING: {
+                    TaskStatus.IN_PROGRESS,
+                    TaskStatus.CANCELLED,
+                },
+                TaskStatus.IN_PROGRESS: {
+                    TaskStatus.COMPLETED,
+                    TaskStatus.CANCELLED,
+                },
+                TaskStatus.COMPLETED: set(),
+                TaskStatus.CANCELLED: set(),
+            }
+
+            if (
+                new_status != current_status
+                and new_status
+                not in allowed_transitions[current_status]
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=(
+                        f"Cannot change task status from "
+                        f"'{current_status.value}' "
+                        f"to '{new_status.value}'."
+                    ),
+                )
+
+            user_task.status = new_status
+
+            if new_status == TaskStatus.COMPLETED:
+                user_task.completed_at = datetime.now(
+                    timezone.utc,
+                )
+            else:
+                user_task.completed_at = None
 
         for key, value in update_data.items():
             setattr(
@@ -404,92 +461,75 @@ class UserTaskService:
             user_task,
         )
 
-        logger.info(
-            "Updated user-task %s",
-            user_task.id,
-        )
-
-        if update_data:
-            logger.info(
-                "Updated fields: %s",
-                ", ".join(update_data.keys()),
-            )
-
-        self.cache_repository.delete(
-            f"taskflow:cache:user_task:{user_task.id}",
+        self.invalidate_task_assignment_cache(
+            task_id=task_id,
+            user_id=user_id,
         )
 
         logger.info(
-            "Invalidated cache 'taskflow:cache:user_task:%s'",
-            user_task.id,
-        )
-
-        self.cache_repository.delete_pattern(
-            "taskflow:cache:user_tasks*",
-        )
-
-        logger.info(
-            "Invalidated cache pattern 'taskflow:cache:user_tasks*'",
+            "Updated assignment successfully",
         )
 
         return user_task
     
-    
-
     def delete_user_task(
         self,
-        user_task_id: UUID,
+        task_id: UUID,
+        user_id: UUID,
         current_user: User,
     ) -> None:
 
         logger.info(
-            "Deleting user-task %s",
-            user_task_id,
+            "Removing user %s from task %s",
+            user_id,
+            task_id,
         )
 
-        user_task = self.user_task_repository.get_user_task_by_id(
-            user_task_id,
+        assignment = self.user_task_repository.get_user_task(
+            user_id=user_id,
+            task_id=task_id,
         )
 
-        if user_task is None:
-            logger.warning(
-                "User-task %s not found",
-                user_task_id,
-            )
-
+        if assignment is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="User task not found",
+                detail="Task assignment not found",
             )
 
         can_access_user_task(
             current_user,
-            user_task,
+            assignment,
         )
 
         self.user_task_repository.delete_user_task(
-            user_task,
+            assignment,
+        )
+
+        self.invalidate_task_assignment_cache(
+            task_id=task_id,
+            user_id=user_id,
         )
 
         logger.info(
-            "Deleted user-task %s",
-            user_task.id,
+            "Task assignment removed successfully",
         )
+        
+        
+    def invalidate_task_assignment_cache(
+        self,
+        task_id: UUID,
+        user_id: UUID,
+    ) -> None:
 
         self.cache_repository.delete(
-            f"taskflow:cache:user_task:{user_task.id}",
+            f"taskflow:cache:task_assignment:{task_id}:{user_id}",
         )
 
-        logger.info(
-            "Invalidated cache 'taskflow:cache:user_task:%s'",
-            user_task.id,
+        self.cache_repository.delete_pattern(
+            f"taskflow:cache:task_assignees:{task_id}*",
         )
 
         self.cache_repository.delete_pattern(
             "taskflow:cache:user_tasks*",
         )
 
-        logger.info(
-            "Invalidated cache pattern 'taskflow:cache:user_tasks*'",
-        )
-        

@@ -29,17 +29,17 @@ class RoleService:
 
         logger.info(
             "Creating role '%s'",
-            roledata.role_name,
+            roledata.name,
         )
 
         existing_role = self.role_repository.get_role_by_name(
-            roledata.role_name,
+            roledata.name,
         )
 
         if existing_role:
             logger.warning(
                 "Role '%s' already exists",
-                roledata.role_name,
+                roledata.name,
             )
 
             raise HTTPException(
@@ -48,7 +48,7 @@ class RoleService:
             )
 
         role = Role(
-            role_name=roledata.role_name,
+            role_name=roledata.name,
         )
 
         role = self.role_repository.create_role(
@@ -57,7 +57,7 @@ class RoleService:
 
         logger.info(
             "Role '%s' created successfully",
-            role.role_name,
+            role.name,
         )
 
         self.cache_repository.delete_pattern(
@@ -159,8 +159,9 @@ class RoleService:
         role_list = [
             {
                 "role_id": str(role.role_id),
-                "role_name": role.role_name,
+                "name": role.role_name,
                 "created_at": role.created_at.isoformat(),
+                "updated_at": role.updated_at.isoformat(),
             }
             for role in roles
         ]
@@ -208,9 +209,9 @@ class RoleService:
             exclude_unset=True,
         )
 
-        if "role_name" in update_data:
+        if "name" in update_data:
             existing_role = self.role_repository.get_role_by_name(
-                update_data["role_name"],
+                update_data["name"],
             )
 
             if (
@@ -219,13 +220,15 @@ class RoleService:
             ):
                 logger.warning(
                     "Role '%s' already exists",
-                    update_data["role_name"],
+                    update_data["name"],
                 )
 
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail="Role name already exists",
                 )
+                
+            role.role_name = update_data.pop("name")
 
         for key, value in update_data.items():
             setattr(

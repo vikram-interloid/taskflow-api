@@ -1,8 +1,10 @@
+from typing import Any
 from uuid import UUID
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.api.schemas.user_schema import UserResponse
 from app.api.core.authorization import can_access_user, is_admin
 from app.api.core.logging import get_logger
 from app.api.core.security import hash_password
@@ -37,7 +39,7 @@ class UserService:
         )
 
         existing_username = self.user_repository.get_user_by_username(
-            userdata.user_name,
+            userdata.name,
         )
 
         if existing_email is not None:
@@ -54,7 +56,7 @@ class UserService:
         if existing_username is not None:
             logger.warning(
                 "Username '%s' already exists",
-                userdata.user_name,
+                userdata.name,
             )
 
             raise HTTPException(
@@ -63,10 +65,10 @@ class UserService:
             )
 
         user = User(
-            user_name=userdata.user_name,
+            user_name=userdata.name,
             email=userdata.email,
             password_hash=hash_password(
-                userdata.password_hash,
+                userdata.password,
             ),
         )
 
@@ -87,24 +89,31 @@ class UserService:
             "Invalidated cache pattern 'taskflow:cache:users*'",
         )
 
-        return user
+        return UserResponse(
+            user_id=user.user_id,
+            name=user.user_name,
+            email=user.email,
+            created_at=user.created_at,
+            updated_at=user.updated_at,
+        )
         
         
     def get_user_by_id(
         self,
         user_id: UUID,
-        current_user: User
-    ) -> User:
+        current_user: User,
+    ) -> dict[str, Any]:
+
+        can_access_user(
+            current_user=current_user,
+            target_user_id=user_id,
+        )
 
         cache_key = f"taskflow:cache:user:{user_id}"
 
         logger.info(
             "Checking cache '%s'",
             cache_key,
-        )
-        can_access_user(
-            current_user=current_user,
-            target_user_id=user_id,
         )
 
         cached_user = self.cache_repository.get(
@@ -130,7 +139,7 @@ class UserService:
 
         if user is None:
             logger.warning(
-                "User %s not found",
+                "User '%s' not found",
                 user_id,
             )
 
@@ -139,15 +148,9 @@ class UserService:
                 detail="User not found",
             )
 
-        logger.info(
-            "Retrieved user '%s' (%s) from database",
-            user.email,
-            user.user_id,
-        )
-
-        user_data = {
+        response = {
             "user_id": str(user.user_id),
-            "user_name": user.user_name,
+            "name": user.user_name,
             "email": user.email,
             "created_at": user.created_at.isoformat(),
             "updated_at": user.updated_at.isoformat(),
@@ -155,7 +158,7 @@ class UserService:
 
         self.cache_repository.set(
             key=cache_key,
-            value=user_data,
+            value=response,
             expire=300,
         )
 
@@ -164,14 +167,16 @@ class UserService:
             user.email,
         )
 
-        return user_data
+        return response
     
     
+    from typing import Any
+
     def get_all_users(
         self,
         query: UserQueryParams,
         current_user: User,
-    ) -> dict:
+    ) -> dict[str, Any]:
 
         cache_key = (
             f"taskflow:cache:users:"
@@ -208,13 +213,15 @@ class UserService:
         )
 
         if is_admin(current_user):
-            users, total = self.user_repository.get_all_users(query)
+            users, total = self.user_repository.get_all_users(
+                query,
+            )
         else:
-            users = [
-                self.user_repository.get_user_by_id(
-                    current_user.user_id,
-                )
-            ]
+            user = self.user_repository.get_user_by_id(
+                current_user.user_id,
+            )
+
+            users = [user] if user else []
             total = len(users)
 
         logger.info(
@@ -225,7 +232,7 @@ class UserService:
         user_list = [
             {
                 "user_id": str(user.user_id),
-                "user_name": user.user_name,
+                "name": user.user_name,
                 "email": user.email,
                 "created_at": user.created_at.isoformat(),
                 "updated_at": user.updated_at.isoformat(),
@@ -305,17 +312,57 @@ class UserService:
         update_data = userdata.model_dump(
             exclude_unset=True,
         )
-
-        for key, value in update_data.items():
-            setattr(
-                user,
-                key,
-                value,
+        
+        if "email" in update_data:
+            existing_email = self.user_repository.get_user_by_email(
+                update_data["email"],
             )
 
-        user = self.user_repository.update_user(
-            user,
-        )
+            if (
+                existing_email is not None
+                and existing_email.user_id != user.user_id
+            ):
+                logger.warning(
+                    "Email '%s' already exists",
+                    update_data["email"],
+                )
+
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Email already exists",
+                )
+
+
+        if "name" in update_data:
+            existing_username = (
+                self.user_repository.get_user_by_username(
+                    update_data["name"],
+                )
+            )
+
+            if (
+                existing_username is not None
+                and existing_username.user_id != user.user_id
+            ):
+                logger.warning(
+                    "Username '%s' already exists",
+                    update_data["name"],
+                )
+
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Username already exists",
+                )
+                
+            user.user_name = update_data.pop("name")
+
+
+            for key, value in update_data.items():
+                setattr(user, key, value)
+
+            user = self.user_repository.update_user(
+                user,
+            )
 
         logger.info(
             "Updated user '%s' (%s)",

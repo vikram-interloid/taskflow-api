@@ -44,8 +44,8 @@ class TaskRepository(BaseRepository):
             stmt=stmt,
             search=query.search,
             columns=[
-                Task.task_name,
-                Task.task_desc,
+                Task.name,
+                Task.desc,
             ],
         )
 
@@ -56,7 +56,7 @@ class TaskRepository(BaseRepository):
         total = self.db.scalar(count_stmt)
 
         sortable_columns = {
-            "task_name": Task.task_name,
+            "name": Task.name,
             "created_at": Task.created_at,
         }
 

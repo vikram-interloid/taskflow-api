@@ -12,6 +12,7 @@ from app.api.schemas.pagination_schema import PaginatedResponse
 from app.api.schemas.query_schema import TaskQueryParams
 from app.api.schemas.task_schema import TaskCreate, TaskResponse, TaskUpdate
 from app.api.services.task_service import TaskService
+from app.api.services.error_service import CREATE_RESPONSES, RESOURCE_RESPONSES
 
 router = APIRouter(
     prefix="/tasks",
@@ -29,6 +30,7 @@ def get_task_service(
     "",
     response_model=TaskResponse,
     status_code=status.HTTP_201_CREATED,
+    responses=CREATE_RESPONSES
 )
 def create_task(
     task_data: TaskCreate,
@@ -47,6 +49,7 @@ def create_task(
     "",
     response_model= PaginatedResponse[TaskResponse],
     status_code=status.HTTP_200_OK,
+    responses=RESOURCE_RESPONSES
 )
 def get_all_tasks(
     query: TaskQueryParams = Depends(),
@@ -60,27 +63,29 @@ def get_all_tasks(
 
 
 @router.get(
-    "/{task_id}",
+    "/{id}",
     response_model=TaskResponse,
     status_code=status.HTTP_200_OK,
+    responses=RESOURCE_RESPONSES
 )
 def get_task_by_id(
-    task_id: UUID,
+    id: UUID,
     current_user: User = Depends(
         get_current_user
     ),
     service: TaskService = Depends(get_task_service),
 ):
-    return service.get_task_by_id(task_id, current_user)
+    return service.get_task_by_id(id, current_user)
 
 
 @router.patch(
-    "/{task_id}",
+    "/{id}",
     response_model=TaskResponse,
     status_code=status.HTTP_200_OK,
+    responses=RESOURCE_RESPONSES
 )
 def update_task(
-    task_id: UUID,
+    id: UUID,
     task_data: TaskUpdate,
     current_user: User = Depends(
         require_roles([
@@ -90,15 +95,16 @@ def update_task(
     ),
     service: TaskService = Depends(get_task_service),
 ):
-    return service.update_task(task_id, task_data, current_user)
+    return service.update_task(id, task_data, current_user)
 
 
 @router.delete(
-    "/{task_id}",
+    "/{id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    responses=RESOURCE_RESPONSES
 )
 def delete_task(
-    task_id: UUID,
+    id: UUID,
     current_user: User = Depends(
         require_roles([
             RoleName.ADMIN,
@@ -108,7 +114,7 @@ def delete_task(
     service: TaskService = Depends(get_task_service),
 ):
     service.delete_task(
-        task_id=task_id,
+        task_id=id,
         current_user=current_user,
     )
     
