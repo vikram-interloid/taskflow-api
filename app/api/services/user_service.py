@@ -4,7 +4,6 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.schemas.user_schema import UserResponse
 from app.api.core.authorization import can_access_user, is_admin
 from app.api.core.logging import get_logger
 from app.api.core.security import hash_password
@@ -14,16 +13,17 @@ from app.api.repositories.cache_repository import CacheRepository
 from app.api.repositories.user_repository import UserRepository
 from app.api.repositories.user_role_repository import UserRoleRepository
 from app.api.schemas.query_schema import UserQueryParams
-from app.api.schemas.user_schema import UserCreate, UserUpdate
+from app.api.schemas.user_schema import UserCreate, UserResponse, UserUpdate
 
 logger = get_logger(__name__)
 
+
 class UserService:
-    def __init__(self,db: Session):
+    def __init__(self, db: Session):
         self.user_repository = UserRepository(db)
         self.user_role_repository = UserRoleRepository(db)
         self.cache_repository = CacheRepository()
-        
+
     def create_user(
         self,
         userdata: UserCreate,
@@ -96,8 +96,7 @@ class UserService:
             created_at=user.created_at,
             updated_at=user.updated_at,
         )
-        
-        
+
     def get_user_by_id(
         self,
         user_id: UUID,
@@ -168,8 +167,7 @@ class UserService:
         )
 
         return response
-    
-    
+
     from typing import Any
 
     def get_all_users(
@@ -259,8 +257,7 @@ class UserService:
         )
 
         return response
-        
-    
+
     def update_user(
         self,
         user_id: UUID,
@@ -292,10 +289,7 @@ class UserService:
             current_user.user_id,
         )
 
-        is_admin = any(
-            role.role_name == RoleName.ADMIN
-            for role in roles
-        )
+        is_admin = any(role.role_name == RoleName.ADMIN for role in roles)
 
         if current_user.user_id != user.user_id and not is_admin:
             logger.warning(
@@ -312,16 +306,13 @@ class UserService:
         update_data = userdata.model_dump(
             exclude_unset=True,
         )
-        
+
         if "email" in update_data:
             existing_email = self.user_repository.get_user_by_email(
                 update_data["email"],
             )
 
-            if (
-                existing_email is not None
-                and existing_email.user_id != user.user_id
-            ):
+            if existing_email is not None and existing_email.user_id != user.user_id:
                 logger.warning(
                     "Email '%s' already exists",
                     update_data["email"],
@@ -332,12 +323,9 @@ class UserService:
                     detail="Email already exists",
                 )
 
-
         if "name" in update_data:
-            existing_username = (
-                self.user_repository.get_user_by_username(
-                    update_data["name"],
-                )
+            existing_username = self.user_repository.get_user_by_username(
+                update_data["name"],
             )
 
             if (
@@ -353,9 +341,8 @@ class UserService:
                     status_code=status.HTTP_409_CONFLICT,
                     detail="Username already exists",
                 )
-                
-            user.user_name = update_data.pop("name")
 
+            user.user_name = update_data.pop("name")
 
             for key, value in update_data.items():
                 setattr(user, key, value)
@@ -394,8 +381,7 @@ class UserService:
         )
 
         return user
-    
-    
+
     def delete_user(
         self,
         user_id: UUID,
@@ -426,10 +412,7 @@ class UserService:
             current_user.user_id,
         )
 
-        is_admin = any(
-            role.role_name == RoleName.ADMIN
-            for role in roles
-        )
+        is_admin = any(role.role_name == RoleName.ADMIN for role in roles)
 
         if current_user.user_id != user.user_id and not is_admin:
             logger.warning(
@@ -469,5 +452,3 @@ class UserService:
         logger.info(
             "Invalidated cache pattern 'taskflow:cache:users*'",
         )
-            
-        

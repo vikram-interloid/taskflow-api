@@ -5,4 +5,3 @@ class RoleName(StrEnum):
     ADMIN = "Admin"
     MANAGER = "Manager"
     USER = "User"
-

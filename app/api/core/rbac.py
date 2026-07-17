@@ -21,15 +21,9 @@ def require_roles(allowed_roles: list[RoleName]):
             current_user.user_id,
         )
 
-        user_roles = {
-            role.role_name
-            for role in roles
-        }
+        user_roles = {role.role_name for role in roles}
 
-        allowed = {
-            role.value
-            for role in allowed_roles
-        }
+        allowed = {role.value for role in allowed_roles}
 
         if user_roles.isdisjoint(allowed):
             raise HTTPException(
@@ -40,4 +34,3 @@ def require_roles(allowed_roles: list[RoleName]):
         return current_user
 
     return role_checker
-

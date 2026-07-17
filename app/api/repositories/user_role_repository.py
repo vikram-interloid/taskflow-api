@@ -33,12 +33,9 @@ class UserRoleRepository(BaseRepository):
         user_id: UUID,
         role_id: UUID,
     ) -> UserRole | None:
-        stmt = (
-            select(UserRole)
-            .where(
-                UserRole.user_id == user_id,
-                UserRole.role_id == role_id,
-            )
+        stmt = select(UserRole).where(
+            UserRole.user_id == user_id,
+            UserRole.role_id == role_id,
         )
 
         result = self.db.execute(stmt)
@@ -69,16 +66,11 @@ class UserRoleRepository(BaseRepository):
         user_id: UUID,
         role_id: UUID,
     ) -> bool:
-        stmt = (
-            select(UserRole)
-            .where(
-                UserRole.user_id == user_id,
-                UserRole.role_id == role_id,
-            )
+        stmt = select(UserRole).where(
+            UserRole.user_id == user_id,
+            UserRole.role_id == role_id,
         )
 
         result = self.db.execute(stmt)
 
         return result.scalar_one_or_none() is not None
-
-

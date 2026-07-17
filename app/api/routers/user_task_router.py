@@ -21,7 +21,6 @@ from app.api.services.error_service import (
 )
 from app.api.services.user_task_service import UserTaskService
 
-
 router = APIRouter(
     prefix="/tasks/{id}/assignees",
     tags=["Task Assignments"],
@@ -102,9 +101,9 @@ def get_task_assignee(
     ),
 ):
     return service.get_task_assignee(
-        task_id = id,
-        user_id = assignee_id,
-        current_user = current_user,
+        task_id=id,
+        user_id=assignee_id,
+        current_user=current_user,
     )
 
 
@@ -126,10 +125,10 @@ def update_task_assignment(
     ),
 ):
     return service.update_user_task(
-        task_id = id,
-        user_id = assignee_id,
-        user_task_data = user_task_data,
-        current_user = current_user,
+        task_id=id,
+        user_id=assignee_id,
+        user_task_data=user_task_data,
+        current_user=current_user,
     )
 
 
@@ -154,10 +153,9 @@ def remove_task_assignment(
     ),
 ):
     service.delete_user_task(
-        task_id = id,
-        user_id = assignee_id,
+        task_id=id,
+        user_id=assignee_id,
         current_user=current_user,
     )
 
     return None
-

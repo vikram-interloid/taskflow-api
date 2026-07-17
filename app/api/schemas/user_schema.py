@@ -3,6 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+
 class UserBase(BaseModel):
     name: str = Field(
         validation_alias="user_name",
@@ -53,5 +54,3 @@ class UserUpdate(BaseModel):
         populate_by_name=True,
         extra="forbid",
     )
-    
-    

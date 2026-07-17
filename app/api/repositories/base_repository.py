@@ -2,14 +2,13 @@ from sqlalchemy import Select, asc, desc, or_
 
 
 class BaseRepository:
-    
+
     @staticmethod
     def apply_filters(
         stmt: Select,
         filters: dict,
         query,
     ) -> Select:
-        
         """
         {
             "status": Task.status,
@@ -25,28 +24,19 @@ class BaseRepository:
 
         return stmt
 
-
     @staticmethod
     def apply_search(
         stmt: Select,
         search: str | None,
         columns: list,
     ) -> Select:
-        
+
         if not search:
             return stmt
 
-        stmt = stmt.where(
-            or_(
-                *[
-                    column.ilike(f"%{search}%")
-                    for column in columns
-                ]
-            )
-        )
+        stmt = stmt.where(or_(*[column.ilike(f"%{search}%") for column in columns]))
 
         return stmt
-
 
     @staticmethod
     def apply_sort(
@@ -65,7 +55,6 @@ class BaseRepository:
             return stmt.order_by(asc(column))
 
         return stmt.order_by(desc(column))
-    
 
     @staticmethod
     def apply_pagination(
@@ -77,5 +66,3 @@ class BaseRepository:
         offset = (page - 1) * limit
 
         return stmt.offset(offset).limit(limit)
-    
-    

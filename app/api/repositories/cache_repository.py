@@ -15,7 +15,6 @@ class CacheRepository:
 
         return json.loads(value)
 
-
     def set(
         self,
         key: str,
@@ -29,7 +28,6 @@ class CacheRepository:
             ex=expire,
         )
 
-
     def delete(
         self,
         key: str,
@@ -37,14 +35,12 @@ class CacheRepository:
 
         redis_client.delete(key)
 
-
     def exists(
         self,
         key: str,
     ) -> bool:
 
         return bool(redis_client.exists(key))
-
 
     def delete_pattern(
         self,
@@ -54,5 +50,3 @@ class CacheRepository:
         keys = redis_client.keys(pattern)
         if keys:
             redis_client.delete(*keys)
-            
-            

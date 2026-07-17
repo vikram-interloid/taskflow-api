@@ -33,12 +33,9 @@ class UserTaskRepository(BaseRepository):
         task_id: UUID,
     ) -> UserTask | None:
 
-        stmt = (
-            select(UserTask)
-            .where(
-                UserTask.user_id == user_id,
-                UserTask.task_id == task_id,
-            )
+        stmt = select(UserTask).where(
+            UserTask.user_id == user_id,
+            UserTask.task_id == task_id,
         )
 
         result = self.db.execute(stmt)
@@ -51,11 +48,8 @@ class UserTaskRepository(BaseRepository):
         query: UserTaskQueryParams,
     ) -> tuple[list[UserTask], int]:
 
-        stmt = (
-            select(UserTask)
-            .where(
-                UserTask.task_id == task_id,
-            )
+        stmt = select(UserTask).where(
+            UserTask.task_id == task_id,
         )
 
         filters = {
@@ -70,12 +64,9 @@ class UserTaskRepository(BaseRepository):
             query=query,
         )
 
-        count_stmt = (
-            stmt.with_only_columns(
-                func.count(UserTask.id),
-            )
-            .order_by(None)
-        )
+        count_stmt = stmt.with_only_columns(
+            func.count(UserTask.id),
+        ).order_by(None)
 
         total = self.db.scalar(count_stmt) or 0
 
@@ -123,11 +114,8 @@ class UserTaskRepository(BaseRepository):
         user_id: UUID,
     ) -> list[UserTask]:
 
-        stmt = (
-            select(UserTask)
-            .where(
-                UserTask.user_id == user_id,
-            )
+        stmt = select(UserTask).where(
+            UserTask.user_id == user_id,
         )
 
         result = self.db.execute(stmt)
@@ -139,11 +127,8 @@ class UserTaskRepository(BaseRepository):
         created_by: UUID,
     ) -> list[UserTask]:
 
-        stmt = (
-            select(UserTask)
-            .where(
-                UserTask.created_by == created_by,
-            )
+        stmt = select(UserTask).where(
+            UserTask.created_by == created_by,
         )
 
         result = self.db.execute(stmt)
@@ -163,5 +148,3 @@ class UserTaskRepository(BaseRepository):
             )
             is not None
         )
-
-

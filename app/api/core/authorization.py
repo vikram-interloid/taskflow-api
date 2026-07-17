@@ -67,10 +67,7 @@ def can_access_task(
     if is_admin(current_user):
         return
 
-    if (
-        is_manager(current_user)
-        and task.created_by == current_user.user_id
-    ):
+    if is_manager(current_user) and task.created_by == current_user.user_id:
         return
 
     raise HTTPException(
@@ -104,10 +101,7 @@ def can_access_user_task(
     if is_admin(current_user):
         return
 
-    if (
-        is_manager(current_user)
-        and user_task.created_by == current_user.user_id
-    ):
+    if is_manager(current_user) and user_task.created_by == current_user.user_id:
         return
 
     if current_user.user_id == user_task.user_id:
@@ -117,5 +111,3 @@ def can_access_user_task(
         status_code=status.HTTP_403_FORBIDDEN,
         detail="Permission denied",
     )
-    
-    

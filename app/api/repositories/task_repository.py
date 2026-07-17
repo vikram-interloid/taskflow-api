@@ -11,13 +11,13 @@ from app.api.schemas.query_schema import TaskQueryParams
 class TaskRepository(BaseRepository):
     def __init__(self, db: Session):
         self.db = db
-        
+
     def create_task(self, task: Task) -> Task:
         self.db.add(task)
         self.db.commit()
         self.db.refresh(task)
         return task
-    
+
     def get_task_by_id(self, task_id: UUID) -> Task | None:
         stmt = select(Task).where(Task.task_id == task_id)
         result = self.db.execute(stmt)
@@ -49,9 +49,7 @@ class TaskRepository(BaseRepository):
             ],
         )
 
-        count_stmt = stmt.with_only_columns(
-            func.count(Task.task_id)
-        ).order_by(None)
+        count_stmt = stmt.with_only_columns(func.count(Task.task_id)).order_by(None)
 
         total = self.db.scalar(count_stmt)
 
@@ -77,15 +75,11 @@ class TaskRepository(BaseRepository):
 
         return result.scalars().all(), total
 
-    
     def update_task(self, task: Task) -> Task:
         self.db.commit()
         self.db.refresh(task)
         return task
 
-
     def delete_task(self, task: Task) -> None:
         self.db.delete(task)
         self.db.commit()
-        
-    

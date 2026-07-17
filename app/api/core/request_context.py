@@ -14,4 +14,3 @@ path_ctx: ContextVar[str] = ContextVar(
     "path",
     default="-",
 )
-

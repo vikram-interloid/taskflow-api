@@ -14,7 +14,6 @@ from app.api.repositories.user_repository import UserRepository
 from app.api.repositories.user_role_repository import UserRoleRepository
 from app.api.schemas.user_role_schema import UserRoleCreate
 
-
 logger = get_logger(__name__)
 
 
@@ -28,7 +27,6 @@ class UserRoleService:
         self.user_repository = UserRepository(db)
         self.role_repository = RoleRepository(db)
         self.cache_repository = CacheRepository()
-
 
     def assign_role(
         self,
@@ -86,10 +84,7 @@ class UserRoleService:
             assigned_by=current_user.user_id,
         )
 
-        created_user_role = (
-            self.user_role_repository
-            .create_user_role(user_role)
-        )
+        created_user_role = self.user_role_repository.create_user_role(user_role)
 
         self.invalidate_user_role_cache(
             user_id,
@@ -102,7 +97,6 @@ class UserRoleService:
         )
 
         return created_user_role
-
 
     def get_user_roles(
         self,
@@ -125,20 +119,13 @@ class UserRoleService:
                 detail="User not found",
             )
 
-        if (
-            current_user.user_id != user_id
-            and not is_admin(current_user)
-        ):
+        if current_user.user_id != user_id and not is_admin(current_user):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Permission denied",
             )
 
-        return (
-            self.user_role_repository
-            .get_roles_by_user_id(user_id)
-        )
-
+        return self.user_role_repository.get_roles_by_user_id(user_id)
 
     def get_user_role_by_id(
         self,
@@ -147,21 +134,15 @@ class UserRoleService:
         current_user: User,
     ) -> UserRole:
 
-        if (
-            current_user.user_id != user_id
-            and not is_admin(current_user)
-        ):
+        if current_user.user_id != user_id and not is_admin(current_user):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Permission denied",
             )
 
-        user_role = (
-            self.user_role_repository
-            .get_user_role(
-                user_id=user_id,
-                role_id=role_id,
-            )
+        user_role = self.user_role_repository.get_user_role(
+            user_id=user_id,
+            role_id=role_id,
         )
 
         if user_role is None:
@@ -171,7 +152,6 @@ class UserRoleService:
             )
 
         return user_role
-
 
     def remove_role(
         self,
@@ -192,12 +172,9 @@ class UserRoleService:
                 detail="Only admin can remove roles",
             )
 
-        user_role = (
-            self.user_role_repository
-            .get_user_role(
-                user_id=user_id,
-                role_id=role_id,
-            )
+        user_role = self.user_role_repository.get_user_role(
+            user_id=user_id,
+            role_id=role_id,
         )
 
         if user_role is None:
@@ -219,7 +196,6 @@ class UserRoleService:
             user_id,
         )
 
-
     def invalidate_user_role_cache(
         self,
         user_id: UUID,
@@ -232,4 +208,3 @@ class UserRoleService:
         self.cache_repository.delete_pattern(
             "taskflow:cache:users*",
         )
-

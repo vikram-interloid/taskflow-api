@@ -16,6 +16,7 @@ from app.api.schemas.role_schema import RoleCreate, RoleUpdate
 
 logger = get_logger(__name__)
 
+
 class RoleService:
     def __init__(self, db: Session):
         self.role_repository = RoleRepository(db)
@@ -70,13 +71,12 @@ class RoleService:
 
         return role
 
-    
     def get_role_by_id(
         self,
         role_id: UUID,
         current_user: User,
     ) -> Role:
-    
+
         logger.info(
             "Fetching role %s",
             role_id,
@@ -96,7 +96,7 @@ class RoleService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Role not found",
             )
-        can_access_role(current_user,role)
+        can_access_role(current_user, role)
 
         logger.info(
             "Retrieved role %s",
@@ -147,9 +147,7 @@ class RoleService:
             roles = self.role_repository.get_all_roles(query)
 
         else:
-            roles = self.user_role_repository.get_roles_by_user_id(
-                current_user.user_id
-            )
+            roles = self.user_role_repository.get_roles_by_user_id(current_user.user_id)
 
         logger.info(
             "Retrieved %d roles from database",
@@ -214,10 +212,7 @@ class RoleService:
                 update_data["name"],
             )
 
-            if (
-                existing_role
-                and existing_role.role_id != role.role_id
-            ):
+            if existing_role and existing_role.role_id != role.role_id:
                 logger.warning(
                     "Role '%s' already exists",
                     update_data["name"],
@@ -227,7 +222,7 @@ class RoleService:
                     status_code=status.HTTP_409_CONFLICT,
                     detail="Role name already exists",
                 )
-                
+
             role.role_name = update_data.pop("name")
 
         for key, value in update_data.items():
@@ -297,5 +292,3 @@ class RoleService:
         logger.info(
             "Invalidated cache pattern 'taskflow:cache:roles*'",
         )
-        
-        

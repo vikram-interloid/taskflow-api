@@ -20,31 +20,28 @@ from app.api.routers.user_task_router import router as user_task_router
 setup_logging()
 
 app = FastAPI(
-    title = 'TaskFlow-API',
+    title="TaskFlow-API",
 )
 
 app.state.limiter = limiter
 
-app.add_exception_handler(RateLimitExceeded,_rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(AuthMiddleware)
 
-API_PREFIX = '/api/v1'
+API_PREFIX = "/api/v1"
 
 app.include_router(oauthrouter)
-app.include_router(auth_router, prefix = API_PREFIX)
-app.include_router(user_router, prefix = API_PREFIX)
-app.include_router(role_router, prefix = API_PREFIX)
-app.include_router(task_router, prefix = API_PREFIX)
-app.include_router(user_role_router, prefix = API_PREFIX)
-app.include_router(user_task_router, prefix = API_PREFIX)
+app.include_router(auth_router, prefix=API_PREFIX)
+app.include_router(user_router, prefix=API_PREFIX)
+app.include_router(role_router, prefix=API_PREFIX)
+app.include_router(task_router, prefix=API_PREFIX)
+app.include_router(user_role_router, prefix=API_PREFIX)
+app.include_router(user_task_router, prefix=API_PREFIX)
 
 
-@app.get('/')
+@app.get("/")
 def home():
-    return {
-       'message':'Welcome to TaskFlow-Api'
-    }
-
+    return {"message": "Welcome to TaskFlow-Api"}

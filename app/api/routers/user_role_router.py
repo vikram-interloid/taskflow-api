@@ -20,7 +20,6 @@ from app.api.services.error_service import (
 )
 from app.api.services.user_role_service import UserRoleService
 
-
 router = APIRouter(
     prefix="/users/{id}/roles",
     tags=["User Roles"],
@@ -120,4 +119,3 @@ def remove_role(
     )
 
     return None
-

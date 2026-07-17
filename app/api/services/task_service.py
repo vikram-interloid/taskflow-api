@@ -75,14 +75,8 @@ class TaskService:
         )
 
         return task
-            
-    
 
-    def get_task_by_id(
-        self,
-        task_id: UUID,
-        current_user: User
-    ) -> dict:
+    def get_task_by_id(self, task_id: UUID, current_user: User) -> dict:
 
         logger.info(
             "Fetching task %s",
@@ -127,7 +121,7 @@ class TaskService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Task not found",
             )
-            
+
         can_access_task(
             current_user,
             task,
@@ -247,8 +241,7 @@ class TaskService:
         )
 
         return response
-    
-    
+
     def update_task(
         self,
         task_id: UUID,
@@ -280,18 +273,15 @@ class TaskService:
             current_user.user_id,
         )
 
-        is_admin = any(
-            role.role_name == RoleName.ADMIN
-            for role in roles
-        )
+        is_admin = any(role.role_name == RoleName.ADMIN for role in roles)
 
         if task.created_by != current_user.user_id and not is_admin:
             logger.warning(
-            "User %s attempted to update task %s owned by %s",
-            current_user.user_id,
-            task_id,
-            task.created_by,
-        )
+                "User %s attempted to update task %s owned by %s",
+                current_user.user_id,
+                task_id,
+                task.created_by,
+            )
 
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -301,8 +291,6 @@ class TaskService:
         update_data = taskdata.model_dump(
             exclude_unset=True,
         )
-
-        
 
         for key, value in update_data.items():
             setattr(
@@ -376,18 +364,15 @@ class TaskService:
             current_user.user_id,
         )
 
-        is_admin = any(
-            role.role_name == RoleName.ADMIN
-            for role in roles
-        )
+        is_admin = any(role.role_name == RoleName.ADMIN for role in roles)
 
         if task.created_by != current_user.user_id and not is_admin:
             logger.warning(
-            "User %s attempted to update task %s owned by %s",
-            current_user.user_id,
-            task_id,
-            task.created_by,
-        )
+                "User %s attempted to update task %s owned by %s",
+                current_user.user_id,
+                task_id,
+                task.created_by,
+            )
 
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -420,5 +405,3 @@ class TaskService:
         logger.info(
             "Invalidated cache pattern 'taskflow:cache:tasks*'",
         )
-        
-        

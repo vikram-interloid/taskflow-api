@@ -18,15 +18,13 @@ from app.api.schemas.token_schema import LoginRequest
 
 logger = get_logger(__name__)
 
+
 class AuthService:
-    def __init__(self,db : Session):
+    def __init__(self, db: Session):
         self.user_repository = UserRepository(db)
         self.refresh_token_repository = RefreshRepository()
-        
-    def auth_login(
-        self,
-        form_data: OAuth2PasswordRequestForm
-    ) -> dict:
+
+    def auth_login(self, form_data: OAuth2PasswordRequestForm) -> dict:
 
         logger.info(
             "Login attempt for '%s'",
@@ -79,10 +77,7 @@ class AuthService:
         self.refresh_token_repository.save_refresh_token(
             user_id=user.user_id,
             refresh_token=refresh_token,
-            expire_seconds=settings.REFRESH_TOKEN_EXPIRE_DAYS
-            * 24
-            * 60
-            * 60,
+            expire_seconds=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
         )
 
         logger.info(
@@ -94,14 +89,9 @@ class AuthService:
             "access_token": access_token,
             "refresh_token": refresh_token,
             "token_type": "bearer",
-        }   
-    
-        
-        
-    def login(
-        self,
-        login_data: LoginRequest
-    ) -> dict:
+        }
+
+    def login(self, login_data: LoginRequest) -> dict:
 
         logger.info(
             "Login attempt for '%s'",
@@ -154,10 +144,7 @@ class AuthService:
         self.refresh_token_repository.save_refresh_token(
             user_id=user.user_id,
             refresh_token=refresh_token,
-            expire_seconds=settings.REFRESH_TOKEN_EXPIRE_DAYS
-            * 24
-            * 60
-            * 60,
+            expire_seconds=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
         )
 
         logger.info(
@@ -170,8 +157,7 @@ class AuthService:
             "refresh_token": refresh_token,
             "token_type": "bearer",
         }
-        
-        
+
     def refresh_access_token(
         self,
         refresh_token: str,
@@ -247,8 +233,7 @@ class AuthService:
             "access_token": access_token,
             "token_type": "bearer",
         }
-        
-        
+
     def logout(
         self,
         refresh_token: str,
@@ -326,6 +311,3 @@ class AuthService:
             "User %s logged out successfully",
             user_id,
         )
-        
-        
-        

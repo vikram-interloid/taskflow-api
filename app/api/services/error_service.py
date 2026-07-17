@@ -1,6 +1,5 @@
 from app.api.schemas.error_schema import ErrorBase
 
-
 UNAUTHORIZED_RESPONSE = {
     "model": ErrorBase,
     "description": "Authentication required or the access token is invalid.",
@@ -34,7 +33,6 @@ INTERNAL_SERVER_ERROR_RESPONSE = {
     "model": ErrorBase,
     "description": "An unexpected internal server error occurred.",
 }
-
 
 
 AUTH_RESPONSES = {
@@ -73,4 +71,3 @@ COMMON_RESPONSES = {
     409: CONFLICT_RESPONSE,
     500: INTERNAL_SERVER_ERROR_RESPONSE,
 }
-

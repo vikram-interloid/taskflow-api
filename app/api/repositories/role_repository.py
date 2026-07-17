@@ -9,7 +9,7 @@ from app.api.schemas.query_schema import RoleQueryParams
 
 
 class RoleRepository(BaseRepository):
-    
+
     def __init__(self, db: Session):
         self.db = db
 
@@ -66,14 +66,11 @@ class RoleRepository(BaseRepository):
 
         return result.scalars().all()
 
-    
     def update_role(self, role: Role) -> Role:
         self.db.commit()
         self.db.refresh(role)
         return role
 
-
     def delete_role(self, role: Role) -> None:
         self.db.delete(role)
         self.db.commit()
-        

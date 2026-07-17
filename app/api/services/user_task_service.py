@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -24,6 +24,7 @@ from app.api.schemas.user_task_schema import (
 
 logger = get_logger(__name__)
 
+
 class UserTaskService:
 
     def __init__(
@@ -36,7 +37,7 @@ class UserTaskService:
         self.user_role_repository = UserRoleRepository(db)
         self.role_repository = RoleRepository(db)
         self.cache_repository = CacheRepository()
-        
+
     def create_user_task(
         self,
         task_id: UUID,
@@ -95,15 +96,12 @@ class UserTaskService:
                 )
 
         if not is_admin(current_user):
-            target_user_roles = (
-                self.user_role_repository.get_roles_by_user_id(
-                    user.user_id,
-                )
+            target_user_roles = self.user_role_repository.get_roles_by_user_id(
+                user.user_id,
             )
 
             target_is_admin = any(
-                role.role_name == RoleName.ADMIN
-                for role in target_user_roles
+                role.role_name == RoleName.ADMIN for role in target_user_roles
             )
 
             if target_is_admin:
@@ -156,7 +154,7 @@ class UserTaskService:
         )
 
         return user_task
-    
+
     def get_task_assignees(
         self,
         task_id: UUID,
@@ -184,10 +182,7 @@ class UserTaskService:
                 detail="Task not found",
             )
 
-        if (
-            not is_admin(current_user)
-            and task.created_by != current_user.user_id
-        ):
+        if not is_admin(current_user) and task.created_by != current_user.user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Permission denied",
@@ -226,11 +221,9 @@ class UserTaskService:
             cache_key,
         )
 
-        assignments, total = (
-            self.user_task_repository.get_task_assignees(
-                task_id=task_id,
-                query=query,
-            )
+        assignments, total = self.user_task_repository.get_task_assignees(
+            task_id=task_id,
+            query=query,
         )
         assignment_list = [
             {
@@ -239,15 +232,9 @@ class UserTaskService:
                 "user_id": str(item.user_id),
                 "created_by": str(item.created_by),
                 "status": item.status.value,
-                "due_at": (
-                    item.due_at.isoformat()
-                    if item.due_at
-                    else None
-                ),
+                "due_at": (item.due_at.isoformat() if item.due_at else None),
                 "completed_at": (
-                    item.completed_at.isoformat()
-                    if item.completed_at
-                    else None
+                    item.completed_at.isoformat() if item.completed_at else None
                 ),
                 "created_at": item.created_at.isoformat(),
                 "updated_at": item.updated_at.isoformat(),
@@ -274,8 +261,7 @@ class UserTaskService:
         )
 
         return response
-    
-    
+
     def get_task_assignee(
         self,
         task_id: UUID,
@@ -309,10 +295,7 @@ class UserTaskService:
             assignment,
         )
 
-        cache_key = (
-            f"taskflow:cache:task_assignment:"
-            f"{task_id}:{user_id}"
-        )
+        cache_key = f"taskflow:cache:task_assignment:" f"{task_id}:{user_id}"
 
         logger.info(
             "Checking cache '%s'",
@@ -342,15 +325,9 @@ class UserTaskService:
             "user_id": str(assignment.user_id),
             "created_by": str(assignment.created_by),
             "status": assignment.status.value,
-            "due_at": (
-                assignment.due_at.isoformat()
-                if assignment.due_at
-                else None
-            ),
+            "due_at": (assignment.due_at.isoformat() if assignment.due_at else None),
             "completed_at": (
-                assignment.completed_at.isoformat()
-                if assignment.completed_at
-                else None
+                assignment.completed_at.isoformat() if assignment.completed_at else None
             ),
             "created_at": assignment.created_at.isoformat(),
             "updated_at": assignment.updated_at.isoformat(),
@@ -369,7 +346,7 @@ class UserTaskService:
         )
 
         return assignment_data
-    
+
     def update_user_task(
         self,
         task_id: UUID,
@@ -429,8 +406,7 @@ class UserTaskService:
 
             if (
                 new_status != current_status
-                and new_status
-                not in allowed_transitions[current_status]
+                and new_status not in allowed_transitions[current_status]
             ):
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
@@ -445,7 +421,7 @@ class UserTaskService:
 
             if new_status == TaskStatus.COMPLETED:
                 user_task.completed_at = datetime.now(
-                    timezone.utc,
+                    UTC,
                 )
             else:
                 user_task.completed_at = None
@@ -471,7 +447,7 @@ class UserTaskService:
         )
 
         return user_task
-    
+
     def delete_user_task(
         self,
         task_id: UUID,
@@ -513,8 +489,7 @@ class UserTaskService:
         logger.info(
             "Task assignment removed successfully",
         )
-        
-        
+
     def invalidate_task_assignment_cache(
         self,
         task_id: UUID,
@@ -532,4 +507,3 @@ class UserTaskService:
         self.cache_repository.delete_pattern(
             "taskflow:cache:user_tasks*",
         )
-

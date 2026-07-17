@@ -17,8 +17,7 @@ def seed_database() -> None:
 
     try:
         print("Seeding database...")
-        
-        
+
         # -----------------------------
         # Roles
         # -----------------------------
@@ -27,16 +26,17 @@ def seed_database() -> None:
         manager_role = Role(role_name="Manager")
         user_role = Role(role_name="User")
 
-        db.add_all([
-            admin_role,
-            manager_role,
-            user_role,
-        ])
+        db.add_all(
+            [
+                admin_role,
+                manager_role,
+                user_role,
+            ]
+        )
 
         db.commit()
 
         print("Roles created")
-
 
         # -----------------------------
         # Users
@@ -82,8 +82,7 @@ def seed_database() -> None:
         db.commit()
 
         print("Users created")
-        
-        
+
         # -----------------------------
         # User Role Assignments
         # -----------------------------
@@ -96,43 +95,24 @@ def seed_database() -> None:
 
         user_role_map = {
             "Siva": ["Admin"],
-
             "Vikram": ["Admin", "Manager"],
-
             "Boopathi": ["Manager"],
-
             "Ram": ["Manager"],
-
             "Naveen": ["User", "Manager", "Admin"],
-
             "Guru": ["User", "Manager", "Admin"],
-
             "Amana": ["User", "Manager", "Admin"],
-
             "Amaldas": ["User"],
-
             "Hari": ["User"],
-
             "Karthik": ["User"],
-
             "Ajith": ["User"],
-
             "Surya": ["User"],
-
             "Dinesh": ["User"],
-
             "Praveen": ["User"],
-
             "Arun": ["User"],
-
             "Bala": ["User"],
-
             "Vignesh": ["User"],
-
             "Ashok": ["User"],
-
             "Sanjay": ["User"],
-
             "Kumar": ["User"],
         }
 
@@ -157,8 +137,7 @@ def seed_database() -> None:
         db.commit()
 
         print("User roles assigned")
-        
-        
+
         # -----------------------------
         # Tasks
         # -----------------------------
@@ -174,7 +153,6 @@ def seed_database() -> None:
             "Alembic Migration",
             "Docker Setup",
             "GitHub Actions",
-
             "Python OOP",
             "Async Programming",
             "PostgreSQL Indexing",
@@ -185,37 +163,31 @@ def seed_database() -> None:
             "Unit Testing",
             "Integration Testing",
             "Logging System",
-
             "AWS EC2",
             "AWS S3",
             "AWS IAM",
             "Terraform",
             "Nginx",
-
             "Kafka Basics",
             "RabbitMQ",
             "Celery",
             "WebSockets",
             "Background Tasks",
-
             "LLM Basics",
             "Prompt Engineering",
             "RAG Pipeline",
             "LangChain",
             "Qdrant",
-
             "FAISS",
             "Vector Search",
             "Embedding Models",
             "OpenAI API",
             "Ollama",
-
             "React Hooks",
             "React Query",
             "TypeScript",
             "Next.js",
             "Tailwind CSS",
-
             "Linux Commands",
             "Bash Scripting",
             "Firewall Rules",
@@ -252,8 +224,7 @@ def seed_database() -> None:
         db.commit()
 
         print("50 Tasks created")
-        
-        
+
         # -----------------------------
         # User Task Assignments
         # -----------------------------
@@ -317,7 +288,7 @@ def seed_database() -> None:
         db.commit()
 
         print("User tasks assigned")
-        
+
         print("Database seeded successfully!")
 
     except Exception as e:
@@ -331,6 +302,3 @@ def seed_database() -> None:
 
 if __name__ == "__main__":
     seed_database()
-    
-    
-    

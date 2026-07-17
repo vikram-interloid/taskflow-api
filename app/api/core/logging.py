@@ -31,10 +31,7 @@ def setup_logging():
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    file_handler = logging.FileHandler(
-        "app.log",
-        mode="a"
-    )
+    file_handler = logging.FileHandler("app.log", mode="a")
 
     file_handler.setFormatter(formatter)
     file_handler.addFilter(RequestContextFilter())
@@ -49,5 +46,3 @@ def setup_logging():
 
 def get_logger(name: str):
     return logging.getLogger(name)
-
-

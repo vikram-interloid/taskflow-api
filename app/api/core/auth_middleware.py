@@ -15,7 +15,7 @@ from app.api.repositories.user_repository import UserRepository
 
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-       
+
         request_id_ctx.set(str(uuid4()))
         method_ctx.set(request.method)
         path_ctx.set(request.url.path)
@@ -32,9 +32,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 db = SessionLocal()
                 try:
                     repository = UserRepository(db)
-                    user = repository.get_user_by_id(
-                        UUID(payload["sub"])
-                    )
+                    user = repository.get_user_by_id(UUID(payload["sub"]))
                     request.state.user = user
                 finally:
                     db.close()
@@ -45,4 +43,3 @@ class AuthMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
 
         return response
-    
