@@ -10,8 +10,8 @@ from app.api.database.db_config import Base
 
 
 class UserRole(Base):
-    __tablename__ = 'user_roles'
-    
+    __tablename__ = "user_roles"
+
     __table_args__ = (
         UniqueConstraint(
             "user_id",
@@ -19,40 +19,39 @@ class UserRole(Base):
             name="uq_user_role",
         ),
     )
-    
-    id: Mapped[uuid.UUID] = mapped_column (
-        UUID(as_uuid = True),
-        primary_key = True,
-        default=uuid.uuid4
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    
+
     role_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid = True),
-        ForeignKey("roles.role_id"),
-        nullable = False,
-        index = True
+        UUID(as_uuid=True), ForeignKey("roles.role_id"), nullable=False, index=True
     )
-    
+
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid = True),
-        ForeignKey("users.user_id",ondelete="CASCADE"),
-        nullable = False,
-        index = True
+        UUID(as_uuid=True),
+        ForeignKey("users.user_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
-    
-    created_at: Mapped[datetime] = mapped_column (
-        TIMESTAMP(timezone = True),
-        server_default = func.now(),
+
+    created_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True),
+        server_default=func.now(),
         nullable=False,
     )
-    
-    assigned_by: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid = True),
-        ForeignKey("users.user_id"),
-        nullable = False,
-        index = True
+
+    updated_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
     )
-    
+
+    assigned_by: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.user_id"), nullable=False, index=True
+    )
+
     user: Mapped["User"] = relationship(
         "User",
         foreign_keys=[user_id],
@@ -67,4 +66,5 @@ class UserRole(Base):
     assigned_by_user: Mapped["User"] = relationship(
         "User",
         foreign_keys=[assigned_by],
+        back_populates="assigned_roles",
     )
